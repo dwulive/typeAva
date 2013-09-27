@@ -1,4 +1,6 @@
-﻿/** qooxdoo v3.0.1 | (c) 2013 1&1 Internet AG, http://1und1.de | http://qooxdoo.org/license */
+///<reference path=".\node.d.ts" >
+///<reference path=".\jquery.d.ts" >
+/** qooxdoo v3.0.1 | (c) 2013 1&1 Internet AG, http://1und1.de | http://qooxdoo.org/license */
 (function () {
     if (!window.qx)
         window.qx = {};
@@ -44788,4 +44790,3 @@
     } catch (e) {
     }
 })();
-//# sourceMappingURL=qx3.js.map

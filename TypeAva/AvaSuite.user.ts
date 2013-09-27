@@ -1,6 +1,6 @@
-///<reference path="Scripts\qx3.d.ts" >
+/*<reference path="Scripts\qx3.d.ts" >
 
- 
+ */
 
 
 // ==UserScript==
@@ -408,6 +408,7 @@
                     RETURN_TIME_INDEX: 3,
                     CMD_LIST_INDEX: 1,
                     cityBuildings: null,
+                    civ_cont : null,
                     initialize: function () {
                         paDebug("paTweak initialize");
                         this.app = qx.core.Init.getApplication();
@@ -416,7 +417,7 @@
                         this.bQc = this.cInfoView.buildingQueue;
                         this.bQh = this.bQc.header;
                         this.playerName = webfrontend.data.Player.getInstance().getName();
-                        var civ_cont = this.cInfoView.container.getChildren();
+                        civ_cont = this.cInfoView.container.getChildren();
                         this.loadOptions();
                         // CityCommandInfoView (kindly borrowed from LoU Tweak)
                         for (var i = 0; i < civ_cont.length; i++) {
@@ -452,7 +453,7 @@
                         }
                     },
                     loadOptions: function () {
-                        _str = localStorage.getItem("Ava_options");
+                        var _str = localStorage.getItem("Ava_options");
                         paDebug(_str);
                         if (_str)
                             this.options = JSON.parse(_str);
@@ -494,7 +495,7 @@
                         }
                         this.options.AvaToolsVersion = paTweak.Version.PAversion;
                         this.app.setUserData("Ava_options", this.options);
-                        str = JSON.stringify(this.options);
+                        var str = JSON.stringify(this.options);
                         localStorage.setItem("Ava_options", str);
                         console.log("loaded");
                     },
@@ -2684,7 +2685,7 @@
                                         eN = eN.replace(re,
                                             function (w) {
                                                 for (var ii = 0; ii < oldStr.length; ++ii) {
-                                                    if (!oldStr[ii].iCompare(w)) {
+                                                    if (oldStr[ii] == iCompare(w)) {
                                                         return "<span style='font-weight: bold;'>" + newStr[ii] + "</span>";
                                                     }
                                                 }
@@ -12687,7 +12688,8 @@
                 LoUPakMap();
                 paTweak.Main.getInstance().initialize();
             }
-        }
+        
+        };
         function initTools() {
             initialize();
         }

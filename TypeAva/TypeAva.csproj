@@ -23,35 +23,14 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="AvaSuite.user.css" />
+    <TypeScriptCompile Include="Scripts\qx3.ts" />
     <TypeScriptCompile Include="AvaSuite.user.ts">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </TypeScriptCompile>
     <Content Include="default.htm" />
-    <TypeScriptCompile Include="Scripts\kquery.d.ts" />
-    <TypeScriptCompile Include="Scripts\node.d.ts" />
-    <Content Include="Scripts\178199.user.js" />
-    <Content Include="Scripts\AvaSuite.user.js" />
-    <Content Include="Scripts\script.js" />
     <Content Include="web.config">
       <SubType>Designer</SubType>
     </Content>
-    <TypeScriptCompile Include="Scripts\qx3.ts" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="packages.config">
-      <SubType>Designer</SubType>
-    </Content>
-    <Content Include="aaaaaaaaaaaaaaaaaaaaaaaaa.snk" />
-    <None Include="Properties\Settings.settings">
-      <Generator>SettingsSingleFileGenerator</Generator>
-      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
-    </None>
-    <None Include="web.Debug.config">
-      <DependentUpon>web.config</DependentUpon>
-    </None>
-    <None Include="web.Release.config">
-      <DependentUpon>web.config</DependentUpon>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Properties\Settings.Designer.cs">
@@ -59,10 +38,6 @@
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
       <DependentUpon>Settings.settings</DependentUpon>
     </Compile>
-  </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Scripts\typings\qunit\" />
-    <Folder Include="Scripts\typings\q\" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System" />

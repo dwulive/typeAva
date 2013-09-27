@@ -12,6 +12,7 @@
     <CssShowBrowserTooltip>True</CssShowBrowserTooltip>
     <CssShowUnsupported>True</CssShowUnsupported>
     <CssSyncVendorValues>True</CssSyncVendorValues>
+    <EnableEnterFormat>false</EnableEnterFormat>
     <JavaScriptEnableGzipping>false</JavaScriptEnableGzipping>
     <JavaScriptEnableMinification>false</JavaScriptEnableMinification>
     <JavaScriptGenerateSourceMaps>true</JavaScriptGenerateSourceMaps>

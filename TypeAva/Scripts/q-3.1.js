@@ -1,17 +1,15 @@
-
-
-/** qooxdoo v3.0.1 | (c) 2013 1&1 Internet AG, http://1und1.de | http://qooxdoo.org/license */
+/** qooxdoo v3.1 | (c) 2013 1&1 Internet AG, http://1und1.de | http://qooxdoo.org/license */
 (function(){
 if (!window.qx) window.qx = {};
 var qx = window.qx;
 
 if (!qx.$$environment) qx.$$environment = {};
-var envinfo = {"json":true,"qx.application":"library.Application","qx.debug":false,"qx.debug.databinding":false,"qx.debug.dispose":false,"qx.debug.io":false,"qx.debug.ui.queue":false,"qx.globalErrorHandling":false,"qx.optimization.variants":true,"qx.revision":"","qx.theme":"qx.theme.Modern","qx.version":"3.0.1"};
+var envinfo = {"json":true,"qx.application":"library.Application","qx.debug":false,"qx.debug.databinding":false,"qx.debug.dispose":false,"qx.debug.io":false,"qx.debug.ui.queue":false,"qx.globalErrorHandling":false,"qx.optimization.variants":true,"qx.revision":"master:f3de269","qx.theme":"qx.theme.Modern","qx.version":"3.1"};
 for (var k in envinfo) qx.$$environment[k] = envinfo[k];
 
 qx.$$packageData = {};
 
-/** qooxdoo v3.0.1 | (c) 2013 1&1 Internet AG, http://1und1.de | http://qooxdoo.org/license */
+/** qooxdoo v3.1 | (c) 2013 1&1 Internet AG, http://1und1.de | http://qooxdoo.org/license */
 qx.$$packageData['0']={"locales":{},"resources":{},"translations":{"C":{},"en":{}}};
 
 /* ************************************************************************
@@ -60,7 +58,7 @@ qx.Bootstrap = {
     var splits = name.split(".");
     var part = splits[0];
     var parent = this.__root && this.__root[part] ? this.__root : window;
-    for(var i = 0,len = splits.length - 1;i < len;i++,part = splits[i]){
+    for(var i = 0,len = splits.length - 1;i < len;){
 
       if(!parent[part]){
 
@@ -93,7 +91,12 @@ qx.Bootstrap = {
   },
   base : function(args, varargs){
 
-    {
+    if(qx.Bootstrap.DEBUG){
+
+      if(!qx.Bootstrap.isFunction(args.callee.base)){
+
+        throw new Error("Cannot call super class. Method is not derived: " + args.callee.displayName);
+      };
     };
     if(arguments.length === 1){
 
@@ -264,9 +267,10 @@ qx.Bootstrap.define("qx.Bootstrap", {
      * Creates a namespace and assigns the given object to it.
      *
      * @internal
+     * @signature function(name, object)
      * @param name {String} The complete namespace to create. Typically, the last part is the class name itself
      * @param object {Object} The object to attach to the namespace
-     * @return {Object} last part of the namespace (typically the class name)
+     * @return {String} last part of the namespace (which object is assigned to)
      * @throws {Error} when the given object already exists.
      */
     createNamespace : qx.Bootstrap.createNamespace,
@@ -284,6 +288,7 @@ qx.Bootstrap.define("qx.Bootstrap", {
     /**
      * Call the same method of the super class.
      *
+     * @signature function(args, varargs)
      * @param args {arguments} the arguments variable of the calling method
      * @param varargs {var} variable number of arguments passed to the overwritten function
      * @return {var} the return value of the method of the base class.
@@ -434,6 +439,7 @@ qx.Bootstrap.define("qx.Bootstrap", {
      * in the object.
      *
      * @internal
+     * @type {String[]}
      */
     __shadowedKeys : ["isPrototypeOf", "hasOwnProperty", "toLocaleString", "toString", "valueOf", "propertyIsEnumerable", "constructor"],
     /**
@@ -503,6 +509,7 @@ qx.Bootstrap.define("qx.Bootstrap", {
     /**
      * Mapping from JavaScript string representation of objects to names
      * @internal
+     * @type {Map}
      */
     __classToTypeMap : {
       "[object String]" : "String",
@@ -828,7 +835,7 @@ qx.Bootstrap.define("qx.util.OOUtil", {
         if(clazz.$$implements){
 
           list = clazz.$$flatImplements;
-          for(i = 0,l = list.length;i < l;i++){
+          for( ;i < l;i++){
 
             if(list[i] === iface){
 
@@ -912,6 +919,10 @@ qx.Bootstrap.define("qx.util.OOUtil", {
  * for more details about the environment key in the config. As you can see
  * from the methods API, there is no way to override an existing key. So if you
  * need to change a qooxdoo setting, you have to use the generator to do so.
+ *
+ * The generator is also responsible for requiring the necessary implementation
+ * classes for each check. When using a check of a new category, make sure to
+ * rebuild you application and let the generator include the necessary files.
  *
  * The following table shows the available checks. If you are
  * interested in more details, check the reference to the implementation of
@@ -1829,6 +1840,14 @@ qx.Bootstrap.define("qx.core.Environment", {
 
           key = "css.pointerevents";
           qx.Bootstrap.warn("The environment key 'event.pointer' is deprecated, " + "please use 'css.pointerevents' instead.");
+        };
+      };
+      // @deprecated {3.1}
+      if(qx.Bootstrap.DEBUG){
+
+        if(key === "json"){
+
+          qx.Bootstrap.warn("The environment key 'json' is deprecated " + "and will eventually be removed.");
         };
       };
       // check the cache
@@ -3589,7 +3608,12 @@ qx.Bootstrap.define("qxWeb", {
           clean.push(arg[i]);
         };
       };
-      var col = qx.lang.Array.cast(clean, qxWeb);
+      var clazz = qxWeb;
+      if(arg[0] && arg[0].getAttribute && arg[0].getAttribute("qx-class")){
+
+        clazz = qx.Bootstrap.getByName(arg[0].getAttribute("qx-class")) || clazz;
+      };
+      var col = qx.lang.Array.cast(clean, clazz);
       for(var i = 0;i < qxWeb.__init.length;i++){
 
         qxWeb.__init[i].call(col);
@@ -6153,6 +6177,1755 @@ qx.Bootstrap.define("qx.lang.Type", {
    http://qooxdoo.org
 
    Copyright:
+     2011-2012 1&1 Internet AG, Germany, http://www.1und1.de
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Martin Wittemann (wittemann)
+     * Daniel Wagner (danielwagner)
+
+************************************************************************ */
+/**
+ * Text selection manipulation module
+ */
+qx.Bootstrap.define("qx.module.TextSelection", {
+  statics : {
+    /**
+     * Get the text selection of the first element.
+     *
+     * @return {String|null}
+     */
+    getTextSelection : function(){
+
+      var el = this[0];
+      if(el){
+
+        if(!qx.module.TextSelection.__isInput(el)){
+
+          el = qx.module.TextSelection.__getTextNode(el);
+        };
+        return el ? qx.bom.Selection.get(el) : null;
+      };
+      return null;
+    },
+    /**
+     * Get the length of the text selection of the first element.
+     *
+     *
+     * @return {Integer|null}
+     *
+     * @attach {qxWeb}
+     */
+    getTextSelectionLength : function(){
+
+      var el = this[0];
+      if(el){
+
+        if(!qx.module.TextSelection.__isInput(el)){
+
+          el = qx.module.TextSelection.__getTextNode(el);
+        };
+        return el ? qx.bom.Selection.getLength(el) : null;
+      };
+      return null;
+    },
+    /**
+     * Get the start of the text selection of the first element.
+     *
+     * @return {Integer|null}
+     *
+     * @attach {qxWeb}
+     */
+    getTextSelectionStart : function(){
+
+      var el = this[0];
+      if(el){
+
+        if(!qx.module.TextSelection.__isInput(el)){
+
+          el = qx.module.TextSelection.__getTextNode(el);
+        };
+        return el ? qx.bom.Selection.getStart(el) : null;
+      };
+      return null;
+    },
+    /**
+     * Get the end of the text selection of the first element.
+     *
+     * @return {Integer|null}
+     *
+     * @attach {qxWeb}
+     */
+    getTextSelectionEnd : function(){
+
+      var el = this[0];
+      if(el){
+
+        if(!qx.module.TextSelection.__isInput(el)){
+
+          el = qx.module.TextSelection.__getTextNode(el);
+        };
+        return el ? qx.bom.Selection.getEnd(el) : null;
+      };
+      return null;
+    },
+    /**
+     * Set the text selection of the first element in the collection
+     * with the given start and end value.
+     * If no end value is passed the selection will extend to the end.
+     *
+     * @param start {Integer} start of the selection (zero based)
+     * @param end {Integer} end of the selection
+     * @return {qxWeb} The collection for chaining.
+     *
+     * @attach {qxWeb}
+     */
+    setTextSelection : function(start, end){
+
+      var el = this[0];
+      if(el){
+
+        if(!qx.module.TextSelection.__isInput(el)){
+
+          el = qx.module.TextSelection.__getTextNode(el);
+        };
+        if(el){
+
+          qx.bom.Selection.set(el, start, end);
+        };
+      };
+      return this;
+    },
+    /**
+     * Clears the text selection of all elements.
+     *
+     * @return {qxWeb} The collection for chaining.
+     *
+     * @attach {qxWeb}
+     */
+    clearTextSelection : function(){
+
+      this._forEachElement(function(el){
+
+        if(!qx.module.TextSelection.__isInput(el)){
+
+          el = qx.module.TextSelection.__getTextNode(el);
+        };
+        if(el){
+
+          qx.bom.Selection.clear(el);
+        };
+      });
+      return this;
+    },
+    /**
+     * Checks if the given DOM node is a text input field or textarea
+     *
+     * @param el {Element} The node to check
+     * @return {Boolean} <code>true</code> if the given node is an input field
+     *
+     * @attach {qxWeb}
+     */
+    __isInput : function(el){
+
+      var tag = el.tagName ? el.tagName.toLowerCase() : null;
+      return (tag === "input" || tag === "textarea");
+    },
+    /**
+     * Returns the first text child node of the given element
+     *
+     * @param el {Element} DOM element
+     * @return {Node|null} text node
+     *
+     * @attach {qxWeb}
+     */
+    __getTextNode : function(el){
+
+      for(var i = 0,l = el.childNodes.length;i < l;i++){
+
+        if(el.childNodes[i].nodeType === 3){
+
+          return el.childNodes[i];
+        };
+      };
+      return null;
+    }
+  },
+  defer : function(statics){
+
+    qxWeb.$attach({
+      "getTextSelection" : statics.getTextSelection,
+      "getTextSelectionLength" : statics.getTextSelectionLength,
+      "getTextSelectionStart" : statics.getTextSelectionStart,
+      "getTextSelectionEnd" : statics.getTextSelectionEnd,
+      "setTextSelection" : statics.setTextSelection,
+      "clearTextSelection" : statics.clearTextSelection
+    });
+  }
+});
+
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
+     2004-2011 1&1 Internet AG, Germany, http://www.1und1.de
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Martin Wittemann (martinwittemann)
+
+************************************************************************ */
+/**
+ * Internal class which contains the checks used by {@link qx.core.Environment}.
+ * All checks in here are marked as internal which means you should never use
+ * them directly.
+ *
+ * This class should contain all checks about HTML.
+ *
+ * @internal
+ */
+qx.Bootstrap.define("qx.bom.client.Html", {
+  statics : {
+    /**
+     * Whether the client supports Web Workers.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if webworkers are supported
+     */
+    getWebWorker : function(){
+
+      return window.Worker != null;
+    },
+    /**
+     * Whether the client supports File Readers
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if FileReaders are supported
+     */
+    getFileReader : function(){
+
+      return window.FileReader != null;
+    },
+    /**
+     * Whether the client supports Geo Location.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if geolocation supported
+     */
+    getGeoLocation : function(){
+
+      return "geolocation" in navigator;
+    },
+    /**
+     * Whether the client supports audio.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if audio is supported
+     */
+    getAudio : function(){
+
+      return !!document.createElement('audio').canPlayType;
+    },
+    /**
+     * Whether the client can play ogg audio format.
+     *
+     * @internal
+     * @return {String} "" or "maybe" or "probably"
+     */
+    getAudioOgg : function(){
+
+      if(!qx.bom.client.Html.getAudio()){
+
+        return "";
+      };
+      var a = document.createElement("audio");
+      return a.canPlayType("audio/ogg");
+    },
+    /**
+     * Whether the client can play mp3 audio format.
+     *
+     * @internal
+     * @return {String} "" or "maybe" or "probably"
+     */
+    getAudioMp3 : function(){
+
+      if(!qx.bom.client.Html.getAudio()){
+
+        return "";
+      };
+      var a = document.createElement("audio");
+      return a.canPlayType("audio/mpeg");
+    },
+    /**
+     * Whether the client can play wave audio wave format.
+     *
+     * @internal
+     * @return {String} "" or "maybe" or "probably"
+     */
+    getAudioWav : function(){
+
+      if(!qx.bom.client.Html.getAudio()){
+
+        return "";
+      };
+      var a = document.createElement("audio");
+      return a.canPlayType("audio/x-wav");
+    },
+    /**
+     * Whether the client can play au audio format.
+     *
+     * @internal
+     * @return {String} "" or "maybe" or "probably"
+     */
+    getAudioAu : function(){
+
+      if(!qx.bom.client.Html.getAudio()){
+
+        return "";
+      };
+      var a = document.createElement("audio");
+      return a.canPlayType("audio/basic");
+    },
+    /**
+     * Whether the client can play aif audio format.
+     *
+     * @internal
+     * @return {String} "" or "maybe" or "probably"
+     */
+    getAudioAif : function(){
+
+      if(!qx.bom.client.Html.getAudio()){
+
+        return "";
+      };
+      var a = document.createElement("audio");
+      return a.canPlayType("audio/x-aiff");
+    },
+    /**
+     * Whether the client supports video.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if video is supported
+     */
+    getVideo : function(){
+
+      return !!document.createElement('video').canPlayType;
+    },
+    /**
+     * Whether the client supports ogg video.
+     *
+     * @internal
+     * @return {String} "" or "maybe" or "probably"
+     */
+    getVideoOgg : function(){
+
+      if(!qx.bom.client.Html.getVideo()){
+
+        return "";
+      };
+      var v = document.createElement("video");
+      return v.canPlayType('video/ogg; codecs="theora, vorbis"');
+    },
+    /**
+     * Whether the client supports mp4 video.
+     *
+     * @internal
+     * @return {String} "" or "maybe" or "probably"
+     */
+    getVideoH264 : function(){
+
+      if(!qx.bom.client.Html.getVideo()){
+
+        return "";
+      };
+      var v = document.createElement("video");
+      return v.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
+    },
+    /**
+     * Whether the client supports webm video.
+     *
+     * @internal
+     * @return {String} "" or "maybe" or "probably"
+     */
+    getVideoWebm : function(){
+
+      if(!qx.bom.client.Html.getVideo()){
+
+        return "";
+      };
+      var v = document.createElement("video");
+      return v.canPlayType('video/webm; codecs="vp8, vorbis"');
+    },
+    /**
+     * Whether the client supports local storage.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if local storage is supported
+     */
+    getLocalStorage : function(){
+
+      try{
+
+        return window.localStorage != null;
+      } catch(exc) {
+
+        // Firefox Bug: Local execution of window.sessionStorage throws error
+        // see https://bugzilla.mozilla.org/show_bug.cgi?id=357323
+        return false;
+      };
+    },
+    /**
+     * Whether the client supports session storage.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if session storage is supported
+     */
+    getSessionStorage : function(){
+
+      try{
+
+        return window.sessionStorage != null;
+      } catch(exc) {
+
+        // Firefox Bug: Local execution of window.sessionStorage throws error
+        // see https://bugzilla.mozilla.org/show_bug.cgi?id=357323
+        return false;
+      };
+    },
+    /**
+     * Whether the client supports user data to persist data. This is only
+     * relevant for IE < 8.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if the user data is supported.
+     */
+    getUserDataStorage : function(){
+
+      var el = document.createElement("div");
+      el.style["display"] = "none";
+      document.getElementsByTagName("head")[0].appendChild(el);
+      var supported = false;
+      try{
+
+        el.addBehavior("#default#userdata");
+        el.load("qxtest");
+        supported = true;
+      } catch(e) {
+      };
+      document.getElementsByTagName("head")[0].removeChild(el);
+      return supported;
+    },
+    /**
+     * Whether the browser supports CSS class lists.
+     * https://developer.mozilla.org/en-US/docs/DOM/element.classList
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if class list is supported.
+     */
+    getClassList : function(){
+
+      return !!(document.documentElement.classList && qx.Bootstrap.getClass(document.documentElement.classList) === "DOMTokenList");
+    },
+    /**
+     * Checks if XPath could be used.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if xpath is supported.
+     */
+    getXPath : function(){
+
+      return !!document.evaluate;
+    },
+    /**
+     * Checks if XUL could be used.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if XUL is supported.
+     */
+    getXul : function(){
+
+      try{
+
+        document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "label");
+        return true;
+      } catch(e) {
+
+        return false;
+      };
+    },
+    /**
+     * Checks if SVG could be used
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if SVG is supported.
+     */
+    getSvg : function(){
+
+      return document.implementation && document.implementation.hasFeature && (document.implementation.hasFeature("org.w3c.dom.svg", "1.0") || document.implementation.hasFeature("http://www.w3.org/TR/SVG11/feature#BasicStructure", "1.1"));
+    },
+    /**
+     * Checks if VML is supported
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if VML is supported.
+     */
+    getVml : function(){
+
+      var el = document.createElement("div");
+      document.body.appendChild(el);
+      el.innerHTML = '<v:shape id="vml_flag1" adj="1" />';
+      el.firstChild.style.behavior = "url(#default#VML)";
+      var hasVml = typeof el.firstChild.adj == "object";
+      document.body.removeChild(el);
+      return hasVml;
+    },
+    /**
+     * Checks if canvas could be used
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if canvas is supported.
+     */
+    getCanvas : function(){
+
+      return !!window.CanvasRenderingContext2D;
+    },
+    /**
+     * Asynchronous check for using data urls.
+     *
+     * @internal
+     * @param callback {Function} The function which should be executed as
+     *   soon as the check is done.
+     */
+    getDataUrl : function(callback){
+
+      var data = new Image();
+      data.onload = data.onerror = function(){
+
+        // wrap that into a timeout because IE might execute it synchronously
+        window.setTimeout(function(){
+
+          callback.call(null, (data.width == 1 && data.height == 1));
+        }, 0);
+      };
+      data.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
+    },
+    /**
+     * Checks if dataset could be used
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if dataset is supported.
+     */
+    getDataset : function(){
+
+      return !!document.documentElement.dataset;
+    },
+    /**
+     * Check for element.contains
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if element.contains is supported
+     */
+    getContains : function(){
+
+      // "object" in IE6/7/8, "function" in IE9
+      return (typeof document.documentElement.contains !== "undefined");
+    },
+    /**
+     * Check for element.compareDocumentPosition
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if element.compareDocumentPosition is supported
+     */
+    getCompareDocumentPosition : function(){
+
+      return (typeof document.documentElement.compareDocumentPosition === "function");
+    },
+    /**
+     * Check for element.textContent. Legacy IEs do not support this, use
+     * innerText instead.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if textContent is supported
+     */
+    getTextContent : function(){
+
+      var el = document.createElement("span");
+      return (typeof el.textContent !== "undefined");
+    },
+    /**
+     * Check for a console object.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if a console is available.
+     */
+    getConsole : function(){
+
+      return typeof window.console !== "undefined";
+    },
+    /**
+     * Check for the <code>naturalHeight</code> and <code>naturalWidth</code>
+     * image element attributes.
+     *
+     * @internal
+     * @return {Boolean} <code>true</code> if both attributes are supported
+     */
+    getNaturalDimensions : function(){
+
+      var img = document.createElement("img");
+      return typeof img.naturalHeight === "number" && typeof img.naturalWidth === "number";
+    },
+    /**
+     * Check for HTML5 history manipulation support.
+    
+     * @internal
+     * @return {Boolean} <code>true</code> if the HTML5 history API is supported
+     */
+    getHistoryState : function(){
+
+      return (typeof window.onpopstate !== "undefined" && typeof window.history.replaceState !== "undefined" && typeof window.history.pushState !== "undefined");
+    },
+    /**
+     * Returns the name of the native object/function used to access the
+     * document's text selection.
+     *
+     * @return {String|null} <code>getSelection</code> if the standard window.getSelection
+     * function is available; <code>selection</code> if the MS-proprietary
+     * document.selection object is available; <code>null</code> if no known
+     * text selection API is available.
+     */
+    getSelection : function(){
+
+      if(typeof window.getSelection === "function"){
+
+        return "getSelection";
+      };
+      if(typeof document.selection === "object"){
+
+        return "selection";
+      };
+      return null;
+    }
+  },
+  defer : function(statics){
+
+    qx.core.Environment.add("html.webworker", statics.getWebWorker);
+    qx.core.Environment.add("html.filereader", statics.getFileReader);
+    qx.core.Environment.add("html.geolocation", statics.getGeoLocation);
+    qx.core.Environment.add("html.audio", statics.getAudio);
+    qx.core.Environment.add("html.audio.ogg", statics.getAudioOgg);
+    qx.core.Environment.add("html.audio.mp3", statics.getAudioMp3);
+    qx.core.Environment.add("html.audio.wav", statics.getAudioWav);
+    qx.core.Environment.add("html.audio.au", statics.getAudioAu);
+    qx.core.Environment.add("html.audio.aif", statics.getAudioAif);
+    qx.core.Environment.add("html.video", statics.getVideo);
+    qx.core.Environment.add("html.video.ogg", statics.getVideoOgg);
+    qx.core.Environment.add("html.video.h264", statics.getVideoH264);
+    qx.core.Environment.add("html.video.webm", statics.getVideoWebm);
+    qx.core.Environment.add("html.storage.local", statics.getLocalStorage);
+    qx.core.Environment.add("html.storage.session", statics.getSessionStorage);
+    qx.core.Environment.add("html.storage.userdata", statics.getUserDataStorage);
+    qx.core.Environment.add("html.classlist", statics.getClassList);
+    qx.core.Environment.add("html.xpath", statics.getXPath);
+    qx.core.Environment.add("html.xul", statics.getXul);
+    qx.core.Environment.add("html.canvas", statics.getCanvas);
+    qx.core.Environment.add("html.svg", statics.getSvg);
+    qx.core.Environment.add("html.vml", statics.getVml);
+    qx.core.Environment.add("html.dataset", statics.getDataset);
+    qx.core.Environment.addAsync("html.dataurl", statics.getDataUrl);
+    qx.core.Environment.add("html.element.contains", statics.getContains);
+    qx.core.Environment.add("html.element.compareDocumentPosition", statics.getCompareDocumentPosition);
+    qx.core.Environment.add("html.element.textcontent", statics.getTextContent);
+    qx.core.Environment.add("html.console", statics.getConsole);
+    qx.core.Environment.add("html.image.naturaldimensions", statics.getNaturalDimensions);
+    qx.core.Environment.add("html.history.state", statics.getHistoryState);
+    qx.core.Environment.add("html.selection", statics.getSelection);
+  }
+});
+
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
+     2004-2008 1&1 Internet AG, Germany, http://www.1und1.de
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Alexander Steitz (aback)
+
+************************************************************************ */
+/**
+ * Low-level selection API to select elements like input and textarea elements
+ * as well as text nodes or elements which their child nodes.
+ *
+ * @ignore(qx.bom.Element, qx.bom.Element.blur)
+ */
+qx.Bootstrap.define("qx.bom.Selection", {
+  /*
+  *****************************************************************************
+     STATICS
+  *****************************************************************************
+  */
+  statics : {
+    /**
+     * Returns the native selection object.
+     *
+     * @signature function(documentNode)
+     * @param documentNode {document} Document node to retrieve the connected selection from
+     * @return {Selection} native selection object
+     */
+    getSelectionObject : qx.core.Environment.select("html.selection", {
+      "selection" : function(documentNode){
+
+        return documentNode.selection;
+      },
+      // suitable for gecko, opera, webkit and mshtml >= 9
+      "default" : function(documentNode){
+
+        return qx.dom.Node.getWindow(documentNode).getSelection();
+      }
+    }),
+    /**
+     * Returns the current selected text.
+     *
+     * @signature function(node)
+     * @param node {Node} node to retrieve the selection for
+     * @return {String|null} selected text as string
+     */
+    get : qx.core.Environment.select("html.selection", {
+      "selection" : function(node){
+
+        // to get the selected text in legacy IE you have to work with the TextRange
+        // of the selection object. So always pass the document node to the
+        // Range class to get this TextRange object.
+        var rng = qx.bom.Range.get(qx.dom.Node.getDocument(node));
+        return rng.text;
+      },
+      // suitable for gecko, opera and webkit
+      "default" : function(node){
+
+        if(this.__isInputOrTextarea(node)){
+
+          return node.value.substring(node.selectionStart, node.selectionEnd);
+        } else {
+
+          return this.getSelectionObject(qx.dom.Node.getDocument(node)).toString();
+        };
+      }
+    }),
+    /**
+     * Returns the length of the selection
+     *
+     * @signature function(node)
+     * @param node {Node} Form node or document/window to check.
+     * @return {Integer|null} length of the selection or null
+     */
+    getLength : qx.core.Environment.select("html.selection", {
+      "selection" : function(node){
+
+        var selectedValue = this.get(node);
+        // get the selected part and split it by linebreaks
+        var split = qx.util.StringSplit.split(selectedValue, /\r\n/);
+        // return the length substracted by the count of linebreaks
+        // legacy IE counts linebreaks as two chars
+        // -> harmonize this to one char per linebreak
+        return selectedValue.length - (split.length - 1);
+      },
+      "default" : function(node){
+
+        if(qx.core.Environment.get("engine.name") == "opera"){
+
+          var selectedValue,selectedLength,split;
+          if(this.__isInputOrTextarea(node)){
+
+            var start = node.selectionStart;
+            var end = node.selectionEnd;
+            selectedValue = node.value.substring(start, end);
+            selectedLength = end - start;
+          } else {
+
+            selectedValue = qx.bom.Selection.get(node);
+            selectedLength = selectedValue.length;
+          };
+          // get the selected part and split it by linebreaks
+          split = qx.util.StringSplit.split(selectedValue, /\r\n/);
+          // substract the count of linebreaks
+          // Opera counts each linebreak as two chars
+          // -> harmonize this to one char per linebreak
+          return selectedLength - (split.length - 1);
+        };
+        // suitable for gecko and webkit
+        if(this.__isInputOrTextarea(node)){
+
+          return node.selectionEnd - node.selectionStart;
+        } else {
+
+          return this.get(node).length;
+        };
+      }
+    }),
+    /**
+     * Returns the start of the selection
+     *
+     * @signature function(node)
+     * @param node {Node} node to check for
+     * @return {Integer} start of current selection or "-1" if the current
+     *                   selection is not within the given node
+     */
+    getStart : qx.core.Environment.select("html.selection", {
+      "selection" : function(node){
+
+        if(this.__isInputOrTextarea(node)){
+
+          var documentRange = qx.bom.Range.get();
+          // Check if the document.selection is the text range inside the input element
+          if(!node.contains(documentRange.parentElement())){
+
+            return -1;
+          };
+          var range = qx.bom.Range.get(node);
+          var len = node.value.length;
+          // Synchronize range start and end points
+          range.moveToBookmark(documentRange.getBookmark());
+          range.moveEnd('character', len);
+          return len - range.text.length;
+        } else {
+
+          var range = qx.bom.Range.get(node);
+          var parentElement = range.parentElement();
+          // get a range which holds the text of the parent element
+          var elementRange = qx.bom.Range.get();
+          try{
+
+            // IE throws an invalid argument error when the document has no selection
+            elementRange.moveToElementText(parentElement);
+          } catch(ex) {
+
+            return 0;
+          };
+          // Move end points of full range so it starts at the user selection
+          // and ends at the end of the element text.
+          var bodyRange = qx.bom.Range.get(qx.dom.Node.getBodyElement(node));
+          bodyRange.setEndPoint("StartToStart", range);
+          bodyRange.setEndPoint("EndToEnd", elementRange);
+          // selection is at beginning
+          if(elementRange.compareEndPoints("StartToStart", bodyRange) == 0){
+
+            return 0;
+          };
+          var moved;
+          var steps = 0;
+          while(true){
+
+            moved = bodyRange.moveStart("character", -1);
+            // Starting points of both ranges are equal
+            if(elementRange.compareEndPoints("StartToStart", bodyRange) == 0){
+
+              break;
+            };
+            // Moving had no effect -> range is at begin of body
+            if(moved == 0){
+
+              break;
+            } else {
+
+              steps++;
+            };
+          };
+          return ++steps;
+        };
+      },
+      "default" : function(node){
+
+        if(qx.core.Environment.get("engine.name") === "gecko" || qx.core.Environment.get("engine.name") === "webkit"){
+
+          if(this.__isInputOrTextarea(node)){
+
+            return node.selectionStart;
+          } else {
+
+            var documentElement = qx.dom.Node.getDocument(node);
+            var documentSelection = this.getSelectionObject(documentElement);
+            // gecko and webkit do differ how the user selected the text
+            // "left-to-right" or "right-to-left"
+            if(documentSelection.anchorOffset < documentSelection.focusOffset){
+
+              return documentSelection.anchorOffset;
+            } else {
+
+              return documentSelection.focusOffset;
+            };
+          };
+        };
+        if(this.__isInputOrTextarea(node)){
+
+          return node.selectionStart;
+        } else {
+
+          return qx.bom.Selection.getSelectionObject(qx.dom.Node.getDocument(node)).anchorOffset;
+        };
+      }
+    }),
+    /**
+     * Returns the end of the selection
+     *
+     * @signature function(node)
+     * @param node {Node} node to check
+     * @return {Integer} end of current selection
+     */
+    getEnd : qx.core.Environment.select("html.selection", {
+      "selection" : function(node){
+
+        if(this.__isInputOrTextarea(node)){
+
+          var documentRange = qx.bom.Range.get();
+          // Check if the document.selection is the text range inside the input element
+          if(!node.contains(documentRange.parentElement())){
+
+            return -1;
+          };
+          var range = qx.bom.Range.get(node);
+          var len = node.value.length;
+          // Synchronize range start and end points
+          range.moveToBookmark(documentRange.getBookmark());
+          range.moveStart('character', -len);
+          return range.text.length;
+        } else {
+
+          var range = qx.bom.Range.get(node);
+          var parentElement = range.parentElement();
+          // get a range which holds the text of the parent element
+          var elementRange = qx.bom.Range.get();
+          try{
+
+            // IE throws an invalid argument error when the document has no selection
+            elementRange.moveToElementText(parentElement);
+          } catch(ex) {
+
+            return 0;
+          };
+          var len = elementRange.text.length;
+          // Move end points of full range so it ends at the user selection
+          // and starts at the start of the element text.
+          var bodyRange = qx.bom.Range.get(qx.dom.Node.getBodyElement(node));
+          bodyRange.setEndPoint("EndToEnd", range);
+          bodyRange.setEndPoint("StartToStart", elementRange);
+          // selection is at beginning
+          if(elementRange.compareEndPoints("EndToEnd", bodyRange) == 0){
+
+            return len - 1;
+          };
+          var moved;
+          var steps = 0;
+          while(true){
+
+            moved = bodyRange.moveEnd("character", 1);
+            // Ending points of both ranges are equal
+            if(elementRange.compareEndPoints("EndToEnd", bodyRange) == 0){
+
+              break;
+            };
+            // Moving had no effect -> range is at begin of body
+            if(moved == 0){
+
+              break;
+            } else {
+
+              steps++;
+            };
+          };
+          return len - (++steps);
+        };
+      },
+      "default" : function(node){
+
+        if(qx.core.Environment.get("engine.name") === "gecko" || qx.core.Environment.get("engine.name") === "webkit"){
+
+          if(this.__isInputOrTextarea(node)){
+
+            return node.selectionEnd;
+          } else {
+
+            var documentElement = qx.dom.Node.getDocument(node);
+            var documentSelection = this.getSelectionObject(documentElement);
+            // gecko and webkit do differ how the user selected the text
+            // "left-to-right" or "right-to-left"
+            if(documentSelection.focusOffset > documentSelection.anchorOffset){
+
+              return documentSelection.focusOffset;
+            } else {
+
+              return documentSelection.anchorOffset;
+            };
+          };
+        };
+        if(this.__isInputOrTextarea(node)){
+
+          return node.selectionEnd;
+        } else {
+
+          return qx.bom.Selection.getSelectionObject(qx.dom.Node.getDocument(node)).focusOffset;
+        };
+      }
+    }),
+    /**
+     * Utility method to check for an input or textarea element
+     *
+     * @param node {Node} node to check
+     * @return {Boolean} Whether the given nodt is an input or textarea element
+     */
+    __isInputOrTextarea : function(node){
+
+      return qx.dom.Node.isElement(node) && (node.nodeName.toLowerCase() == "input" || node.nodeName.toLowerCase() == "textarea");
+    },
+    /**
+     * Sets a selection at the given node with the given start and end.
+     * For text nodes, input and textarea elements the start and end parameters
+     * set the boundaries at the text.
+     * For element nodes the start and end parameters are used to select the
+     * childNodes of the given element.
+     *
+     * @signature function(node, start, end)
+     * @param node {Node} node to set the selection at
+     * @param start {Integer} start of the selection
+     * @param end {Integer} end of the selection
+     * @return {Boolean} whether a selection is drawn
+     */
+    set : qx.core.Environment.select("html.selection", {
+      "selection" : function(node, start, end){
+
+        var rng;
+        // if the node is the document itself then work on with the body element
+        if(qx.dom.Node.isDocument(node)){
+
+          node = node.body;
+        };
+        if(qx.dom.Node.isElement(node) || qx.dom.Node.isText(node)){
+
+          switch(node.nodeName.toLowerCase()){case "input":case "textarea":case "button":
+          if(end === undefined){
+
+            end = node.value.length;
+          };
+          if(start >= 0 && start <= node.value.length && end >= 0 && end <= node.value.length){
+
+            rng = qx.bom.Range.get(node);
+            rng.collapse(true);
+            rng.moveStart("character", start);
+            rng.moveEnd("character", end - start);
+            rng.select();
+            return true;
+          };
+          break;case "#text":
+          if(end === undefined){
+
+            end = node.nodeValue.length;
+          };
+          if(start >= 0 && start <= node.nodeValue.length && end >= 0 && end <= node.nodeValue.length){
+
+            // get a range of the body element
+            rng = qx.bom.Range.get(qx.dom.Node.getBodyElement(node));
+            // use the parent node -> "moveToElementText" expects an element
+            rng.moveToElementText(node.parentNode);
+            rng.collapse(true);
+            rng.moveStart("character", start);
+            rng.moveEnd("character", end - start);
+            rng.select();
+            return true;
+          };
+          break;default:
+          if(end === undefined){
+
+            end = node.childNodes.length - 1;
+          };
+          // check start and end -> childNodes
+          if(node.childNodes[start] && node.childNodes[end]){
+
+            // get the TextRange of the body element
+            // IMPORTANT: only with a range of the body the method "moveElementToText" is available
+            rng = qx.bom.Range.get(qx.dom.Node.getBodyElement(node));
+            // position it at the given node
+            rng.moveToElementText(node.childNodes[start]);
+            rng.collapse(true);
+            // create helper range
+            var newRng = qx.bom.Range.get(qx.dom.Node.getBodyElement(node));
+            newRng.moveToElementText(node.childNodes[end]);
+            // set the end of the range to the end of the helper range
+            rng.setEndPoint("EndToEnd", newRng);
+            rng.select();
+            return true;
+          };};
+        };
+        return false;
+      },
+      // suitable for gecko, opera, webkit and mshtml >=9
+      "default" : function(node, start, end){
+
+        // special handling for input and textarea elements
+        var nodeName = node.nodeName.toLowerCase();
+        if(qx.dom.Node.isElement(node) && (nodeName == "input" || nodeName == "textarea")){
+
+          // if "end" is not given set it to the end
+          if(end === undefined){
+
+            end = node.value.length;
+          };
+          // check boundaries
+          if(start >= 0 && start <= node.value.length && end >= 0 && end <= node.value.length){
+
+            node.focus();
+            node.select();
+            node.setSelectionRange(start, end);
+            return true;
+          };
+        } else {
+
+          var validBoundaries = false;
+          var sel = qx.dom.Node.getWindow(node).getSelection();
+          var rng = qx.bom.Range.get(node);
+          // element or text node?
+          // for elements nodes the offsets are applied to childNodes
+          // for text nodes the offsets are applied to the text content
+          if(qx.dom.Node.isText(node)){
+
+            if(end === undefined){
+
+              end = node.length;
+            };
+            if(start >= 0 && start < node.length && end >= 0 && end <= node.length){
+
+              validBoundaries = true;
+            };
+          } else if(qx.dom.Node.isElement(node)){
+
+            if(end === undefined){
+
+              end = node.childNodes.length - 1;
+            };
+            if(start >= 0 && node.childNodes[start] && end >= 0 && node.childNodes[end]){
+
+              validBoundaries = true;
+            };
+          } else if(qx.dom.Node.isDocument(node)){
+
+            // work on with the body element
+            node = node.body;
+            if(end === undefined){
+
+              end = node.childNodes.length - 1;
+            };
+            if(start >= 0 && node.childNodes[start] && end >= 0 && node.childNodes[end]){
+
+              validBoundaries = true;
+            };
+          };;
+          if(validBoundaries){
+
+            // collapse the selection if needed
+            if(!sel.isCollapsed){
+
+              sel.collapseToStart();
+            };
+            // set start and end of the range
+            rng.setStart(node, start);
+            // for element nodes set the end after the childNode
+            if(qx.dom.Node.isText(node)){
+
+              rng.setEnd(node, end);
+            } else {
+
+              rng.setEndAfter(node.childNodes[end]);
+            };
+            // remove all existing ranges and add the new one
+            if(sel.rangeCount > 0){
+
+              sel.removeAllRanges();
+            };
+            sel.addRange(rng);
+            return true;
+          };
+        };
+        return false;
+      }
+    }),
+    /**
+     * Selects all content/childNodes of the given node
+     *
+     * @param node {Node} text, element or document node
+     * @return {Boolean} whether a selection is drawn
+     */
+    setAll : function(node){
+
+      return qx.bom.Selection.set(node, 0);
+    },
+    /**
+     * Clears the selection on the given node.
+     *
+     * @param node {Node} node to clear the selection for
+     */
+    clear : qx.core.Environment.select("html.selection", {
+      "selection" : function(node){
+
+        var sel = qx.bom.Selection.getSelectionObject(qx.dom.Node.getDocument(node));
+        var rng = qx.bom.Range.get(node);
+        var parent = rng.parentElement();
+        var documentRange = qx.bom.Range.get(qx.dom.Node.getDocument(node));
+        // only collapse if the selection is really on the given node
+        // -> compare the two parent elements of the ranges with each other and
+        // the given node
+        if(parent == documentRange.parentElement() && parent == node){
+
+          sel.empty();
+        };
+      },
+      "default" : function(node){
+
+        var sel = qx.bom.Selection.getSelectionObject(qx.dom.Node.getDocument(node));
+        var nodeName = node.nodeName.toLowerCase();
+        // if the node is an input or textarea element use the specialized methods
+        if(qx.dom.Node.isElement(node) && (nodeName == "input" || nodeName == "textarea")){
+
+          node.setSelectionRange(0, 0);
+          if(qx.bom.Element && qx.bom.Element.blur){
+
+            qx.bom.Element.blur(node);
+          };
+        } else if(qx.dom.Node.isDocument(node) || nodeName == "body"){
+
+          sel.collapse(node.body ? node.body : node, 0);
+        } else {
+
+          var rng = qx.bom.Range.get(node);
+          if(!rng.collapsed){
+
+            var compareNode;
+            var commonAncestor = rng.commonAncestorContainer;
+            // compare the parentNode of the textNode with the given node
+            // (if this node is an element) to decide whether the selection
+            // is cleared or not.
+            if(qx.dom.Node.isElement(node) && qx.dom.Node.isText(commonAncestor)){
+
+              compareNode = commonAncestor.parentNode;
+            } else {
+
+              compareNode = commonAncestor;
+            };
+            if(compareNode == node){
+
+              sel.collapse(node, 0);
+            };
+          };
+        };
+      }
+    })
+  }
+});
+
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
+     2004-2008 1&1 Internet AG, Germany, http://www.1und1.de
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Sebastian Werner (wpbasti)
+
+************************************************************************ */
+/**
+ * Basic node creation and type detection
+ */
+qx.Bootstrap.define("qx.dom.Node", {
+  /*
+  *****************************************************************************
+     STATICS
+  *****************************************************************************
+  */
+  statics : {
+    /*
+    ---------------------------------------------------------------------------
+      NODE TYPES
+    ---------------------------------------------------------------------------
+    */
+    /**
+     * @type {Map} Node type:
+     *
+     * * ELEMENT
+     * * ATTRIBUTE
+     * * TEXT
+     * * CDATA_SECTION
+     * * ENTITY_REFERENCE
+     * * ENTITY
+     * * PROCESSING_INSTRUCTION
+     * * COMMENT
+     * * DOCUMENT
+     * * DOCUMENT_TYPE
+     * * DOCUMENT_FRAGMENT
+     * * NOTATION
+     */
+    ELEMENT : 1,
+    ATTRIBUTE : 2,
+    TEXT : 3,
+    CDATA_SECTION : 4,
+    ENTITY_REFERENCE : 5,
+    ENTITY : 6,
+    PROCESSING_INSTRUCTION : 7,
+    COMMENT : 8,
+    DOCUMENT : 9,
+    DOCUMENT_TYPE : 10,
+    DOCUMENT_FRAGMENT : 11,
+    NOTATION : 12,
+    /*
+    ---------------------------------------------------------------------------
+      DOCUMENT ACCESS
+    ---------------------------------------------------------------------------
+    */
+    /**
+     * Returns the owner document of the given node
+     *
+     * @param node {Node|Document|Window} the node which should be tested
+     * @return {Document|null} The document of the given DOM node
+     */
+    getDocument : function(node){
+
+      return node.nodeType === this.DOCUMENT ? node : // is document already
+      node.ownerDocument || // is DOM node
+      node.document;
+    },
+    /**
+     * Returns the DOM2 <code>defaultView</code> (window).
+     *
+     * @param node {Node|Document|Window} node to inspect
+     * @return {Window} the <code>defaultView</code> of the given node
+     */
+    getWindow : function(node){
+
+      // is a window already
+      if(node.nodeType == null){
+
+        return node;
+      };
+      // jump to document
+      if(node.nodeType !== this.DOCUMENT){
+
+        node = node.ownerDocument;
+      };
+      // jump to window
+      return node.defaultView || node.parentWindow;
+    },
+    /**
+     * Returns the document element. (Logical root node)
+     *
+     * This is a convenience attribute that allows direct access to the child
+     * node that is the root element of the document. For HTML documents,
+     * this is the element with the tagName "HTML".
+     *
+     * @param node {Node|Document|Window} node to inspect
+     * @return {Element} document element of the given node
+     */
+    getDocumentElement : function(node){
+
+      return this.getDocument(node).documentElement;
+    },
+    /**
+     * Returns the body element. (Visual root node)
+     *
+     * This normally only makes sense for HTML documents. It returns
+     * the content area of the HTML document.
+     *
+     * @param node {Node|Document|Window} node to inspect
+     * @return {Element} document body of the given node
+     */
+    getBodyElement : function(node){
+
+      return this.getDocument(node).body;
+    },
+    /*
+    ---------------------------------------------------------------------------
+      TYPE TESTS
+    ---------------------------------------------------------------------------
+    */
+    /**
+     * Whether the given object is a DOM node
+     *
+     * @param node {Node} the node which should be tested
+     * @return {Boolean} true if the node is a DOM node
+     */
+    isNode : function(node){
+
+      return !!(node && node.nodeType != null);
+    },
+    /**
+     * Whether the given object is a DOM element node
+     *
+     * @param node {Node} the node which should be tested
+     * @return {Boolean} true if the node is a DOM element
+     */
+    isElement : function(node){
+
+      return !!(node && node.nodeType === this.ELEMENT);
+    },
+    /**
+     * Whether the given object is a DOM document node
+     *
+     * @param node {Node} the node which should be tested
+     * @return {Boolean} true when the node is a DOM document
+     */
+    isDocument : function(node){
+
+      return !!(node && node.nodeType === this.DOCUMENT);
+    },
+    /**
+     * Whether the given object is a DOM text node
+     *
+     * @param node {Node} the node which should be tested
+     * @return {Boolean} true if the node is a DOM text node
+     */
+    isText : function(node){
+
+      return !!(node && node.nodeType === this.TEXT);
+    },
+    /**
+     * Check whether the given object is a browser window object.
+     *
+     * @param obj {Object} the object which should be tested
+     * @return {Boolean} true if the object is a window object
+     */
+    isWindow : function(obj){
+
+      return !!(obj && obj.history && obj.location && obj.document);
+    },
+    /**
+     * Whether the node has the given node name
+     *
+     * @param node {Node} the node
+     * @param nodeName {String} the node name to check for
+     * @return {Boolean} Whether the node has the given node name
+     */
+    isNodeName : function(node, nodeName){
+
+      if(!nodeName || !node || !node.nodeName){
+
+        return false;
+      };
+      return nodeName.toLowerCase() == qx.dom.Node.getName(node);
+    },
+    /*
+    ---------------------------------------------------------------------------
+      UTILITIES
+    ---------------------------------------------------------------------------
+    */
+    /**
+     * Get the node name as lower case string
+     *
+     * @param node {Node} the node
+     * @return {String} the node name
+     */
+    getName : function(node){
+
+      if(!node || !node.nodeName){
+
+        return null;
+      };
+      return node.nodeName.toLowerCase();
+    },
+    /**
+     * Returns the text content of an node where the node may be of node type
+     * NODE_ELEMENT, NODE_ATTRIBUTE, NODE_TEXT or NODE_CDATA
+     *
+     * @param node {Node} the node from where the search should start.
+     *     If the node has subnodes the text contents are recursively retreived and joined.
+     * @return {String} the joined text content of the given node or null if not appropriate.
+     * @signature function(node)
+     */
+    getText : function(node){
+
+      if(!node || !node.nodeType){
+
+        return null;
+      };
+      switch(node.nodeType){case 1:
+      // NODE_ELEMENT
+      var i,a = [],nodes = node.childNodes,length = nodes.length;
+      for(i = 0;i < length;i++){
+
+        a[i] = this.getText(nodes[i]);
+      };
+      return a.join("");case 2:// NODE_ATTRIBUTE
+      case 3:// NODE_TEXT
+      case 4:
+      // CDATA
+      return node.nodeValue;};
+      return null;
+    },
+    /**
+     * Checks if the given node is a block node
+     *
+     * @param node {Node} Node
+     * @return {Boolean} whether it is a block node
+     */
+    isBlockNode : function(node){
+
+      if(!qx.dom.Node.isElement(node)){
+
+        return false;
+      };
+      node = qx.dom.Node.getName(node);
+      return /^(body|form|textarea|fieldset|ul|ol|dl|dt|dd|li|div|hr|p|h[1-6]|quote|pre|table|thead|tbody|tfoot|tr|td|th|iframe|address|blockquote)$/.test(node);
+    }
+  }
+});
+
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
+     2004-2008 1&1 Internet AG, Germany, http://www.1und1.de
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Alexander Steitz (aback)
+
+************************************************************************ */
+/**
+ * Low-level Range API which is used together with the low-level Selection API.
+ * This is especially useful whenever a developer want to work on text level,
+ * e.g. for an editor.
+ */
+qx.Bootstrap.define("qx.bom.Range", {
+  /*
+  *****************************************************************************
+     STATICS
+  *****************************************************************************
+  */
+  statics : {
+    /**
+     * Returns the range object of the given node.
+     *
+     * @signature function(node)
+     * @param node {Node} node to get the range of
+     * @return {Range} valid range of given selection
+     */
+    get : qx.core.Environment.select("html.selection", {
+      "selection" : function(node){
+
+        // check for the type of the given node
+        // for legacy IE the nodes input, textarea, button and body
+        // have access to own TextRange objects. Everything else is
+        // gathered via the selection object.
+        if(qx.dom.Node.isElement(node)){
+
+          switch(node.nodeName.toLowerCase()){case "input":
+          switch(node.type){case "text":case "password":case "hidden":case "button":case "reset":case "file":case "submit":
+          return node.createTextRange();
+          break;default:
+          return qx.bom.Selection.getSelectionObject(qx.dom.Node.getDocument(node)).createRange();};
+          break;case "textarea":case "body":case "button":
+          return node.createTextRange();
+          break;default:
+          return qx.bom.Selection.getSelectionObject(qx.dom.Node.getDocument(node)).createRange();};
+        } else {
+
+          if(node == null){
+
+            node = window;
+          };
+          // need to pass the document node to work with multi-documents
+          return qx.bom.Selection.getSelectionObject(qx.dom.Node.getDocument(node)).createRange();
+        };
+      },
+      // suitable for gecko, opera and webkit
+      "default" : function(node){
+
+        var doc = qx.dom.Node.getDocument(node);
+        // get the selection object of the corresponding document
+        var sel = qx.bom.Selection.getSelectionObject(doc);
+        if(sel.rangeCount > 0){
+
+          return sel.getRangeAt(0);
+        } else {
+
+          return doc.createRange();
+        };
+      }
+    })
+  }
+});
+
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
+     2004-2008 1&1 Internet AG, Germany, http://www.1und1.de
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Sebastian Werner (wpbasti)
+     * Adrian Olaru (adrianolaru)
+
+   ======================================================================
+
+   This class contains code based on the following work:
+
+   * Cross-Browser Split
+     http://blog.stevenlevithan.com/archives/cross-browser-split
+     Version 1.0.1
+
+     Copyright:
+       (c) 2006-2007, Steven Levithan <http://stevenlevithan.com>
+
+     License:
+       MIT: http://www.opensource.org/licenses/mit-license.php
+
+     Authors:
+       * Steven Levithan
+
+************************************************************************ */
+/**
+ * Implements an ECMA-compliant, uniform cross-browser split method
+ */
+qx.Bootstrap.define("qx.util.StringSplit", {
+  statics : {
+    /**
+     * ECMA-compliant, uniform cross-browser split method
+     *
+     * @param str {String} Incoming string to split
+     * @param separator {RegExp} Specifies the character to use for separating the string.
+     *   The separator is treated as a string or a  regular expression. If separator is
+     *   omitted, the array returned contains one element consisting of the entire string.
+     * @param limit {Integer?} Integer specifying a limit on the number of splits to be found.
+     * @return {String[]} split string
+     */
+    split : function(str, separator, limit){
+
+      // if `separator` is not a regex, use the native `split`
+      if(Object.prototype.toString.call(separator) !== "[object RegExp]"){
+
+        return String.prototype.split.call(str, separator, limit);
+      };
+      var output = [],lastLastIndex = 0,flags = (separator.ignoreCase ? "i" : "") + (separator.multiline ? "m" : "") + (separator.sticky ? "y" : ""),separator = RegExp(separator.source, flags + "g"),// make `global` and avoid `lastIndex` issues by working with a copy
+      separator2,match,lastIndex,lastLength,compliantExecNpcg = /()??/.exec("")[1] === undefined;
+      // NPCG: nonparticipating capturing group
+      str = str + "";
+      // type conversion
+      if(!compliantExecNpcg){
+
+        separator2 = RegExp("^" + separator.source + "$(?!\\s)", flags);
+      };
+      /* behavior for `limit`: if it's...
+      - `undefined`: no limit.
+      - `NaN` or zero: return an empty array.
+      - a positive number: use `Math.floor(limit)`.
+      - a negative number: no limit.
+      - other: type-convert, then use the above rules. */
+      if(limit === undefined || +limit < 0){
+
+        limit = Infinity;
+      } else {
+
+        limit = Math.floor(+limit);
+        if(!limit){
+
+          return [];
+        };
+      };
+      while(match = separator.exec(str)){
+
+        lastIndex = match.index + match[0].length;
+        // `separator.lastIndex` is not reliable cross-browser
+        if(lastIndex > lastLastIndex){
+
+          output.push(str.slice(lastLastIndex, match.index));
+          // fix browsers whose `exec` methods don't consistently return `undefined` for nonparticipating capturing groups
+          if(!compliantExecNpcg && match.length > 1){
+
+            match[0].replace(separator2, function(){
+
+              for(var i = 1;i < arguments.length - 2;i++){
+
+                if(arguments[i] === undefined){
+
+                  match[i] = undefined;
+                };
+              };
+            });
+          };
+          if(match.length > 1 && match.index < str.length){
+
+            Array.prototype.push.apply(output, match.slice(1));
+          };
+          lastLength = match[0].length;
+          lastLastIndex = lastIndex;
+          if(output.length >= limit){
+
+            break;
+          };
+        };
+        if(separator.lastIndex === match.index){
+
+          separator.lastIndex++;
+        };
+      };
+      if(lastLastIndex === str.length){
+
+        if(lastLength || !separator.test("")){
+
+          output.push("");
+        };
+      } else {
+
+        output.push(str.slice(lastLastIndex));
+      };
+      return output.length > limit ? output.slice(0, limit) : output;
+    }
+  }
+});
+
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
      2007-2013 1&1 Internet AG, Germany, http://www.1und1.de
 
    License:
@@ -7196,491 +8969,6 @@ qx.Bootstrap.define("qx.lang.Function", {
    http://qooxdoo.org
 
    Copyright:
-     2004-2011 1&1 Internet AG, Germany, http://www.1und1.de
-
-   License:
-     LGPL: http://www.gnu.org/licenses/lgpl.html
-     EPL: http://www.eclipse.org/org/documents/epl-v10.php
-     See the LICENSE file in the project's top-level directory for details.
-
-   Authors:
-     * Martin Wittemann (martinwittemann)
-
-************************************************************************ */
-/**
- * Internal class which contains the checks used by {@link qx.core.Environment}.
- * All checks in here are marked as internal which means you should never use
- * them directly.
- *
- * This class should contain all checks about HTML.
- *
- * @internal
- */
-qx.Bootstrap.define("qx.bom.client.Html", {
-  statics : {
-    /**
-     * Whether the client supports Web Workers.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if webworkers are supported
-     */
-    getWebWorker : function(){
-
-      return window.Worker != null;
-    },
-    /**
-     * Whether the client supports File Readers
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if FileReaders are supported
-     */
-    getFileReader : function(){
-
-      return window.FileReader != null;
-    },
-    /**
-     * Whether the client supports Geo Location.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if geolocation supported
-     */
-    getGeoLocation : function(){
-
-      return "geolocation" in navigator;
-    },
-    /**
-     * Whether the client supports audio.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if audio is supported
-     */
-    getAudio : function(){
-
-      return !!document.createElement('audio').canPlayType;
-    },
-    /**
-     * Whether the client can play ogg audio format.
-     *
-     * @internal
-     * @return {String} "" or "maybe" or "probably"
-     */
-    getAudioOgg : function(){
-
-      if(!qx.bom.client.Html.getAudio()){
-
-        return "";
-      };
-      var a = document.createElement("audio");
-      return a.canPlayType("audio/ogg");
-    },
-    /**
-     * Whether the client can play mp3 audio format.
-     *
-     * @internal
-     * @return {String} "" or "maybe" or "probably"
-     */
-    getAudioMp3 : function(){
-
-      if(!qx.bom.client.Html.getAudio()){
-
-        return "";
-      };
-      var a = document.createElement("audio");
-      return a.canPlayType("audio/mpeg");
-    },
-    /**
-     * Whether the client can play wave audio wave format.
-     *
-     * @internal
-     * @return {String} "" or "maybe" or "probably"
-     */
-    getAudioWav : function(){
-
-      if(!qx.bom.client.Html.getAudio()){
-
-        return "";
-      };
-      var a = document.createElement("audio");
-      return a.canPlayType("audio/x-wav");
-    },
-    /**
-     * Whether the client can play au audio format.
-     *
-     * @internal
-     * @return {String} "" or "maybe" or "probably"
-     */
-    getAudioAu : function(){
-
-      if(!qx.bom.client.Html.getAudio()){
-
-        return "";
-      };
-      var a = document.createElement("audio");
-      return a.canPlayType("audio/basic");
-    },
-    /**
-     * Whether the client can play aif audio format.
-     *
-     * @internal
-     * @return {String} "" or "maybe" or "probably"
-     */
-    getAudioAif : function(){
-
-      if(!qx.bom.client.Html.getAudio()){
-
-        return "";
-      };
-      var a = document.createElement("audio");
-      return a.canPlayType("audio/x-aiff");
-    },
-    /**
-     * Whether the client supports video.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if video is supported
-     */
-    getVideo : function(){
-
-      return !!document.createElement('video').canPlayType;
-    },
-    /**
-     * Whether the client supports ogg video.
-     *
-     * @internal
-     * @return {String} "" or "maybe" or "probably"
-     */
-    getVideoOgg : function(){
-
-      if(!qx.bom.client.Html.getVideo()){
-
-        return "";
-      };
-      var v = document.createElement("video");
-      return v.canPlayType('video/ogg; codecs="theora, vorbis"');
-    },
-    /**
-     * Whether the client supports mp4 video.
-     *
-     * @internal
-     * @return {String} "" or "maybe" or "probably"
-     */
-    getVideoH264 : function(){
-
-      if(!qx.bom.client.Html.getVideo()){
-
-        return "";
-      };
-      var v = document.createElement("video");
-      return v.canPlayType('video/mp4; codecs="avc1.42E01E, mp4a.40.2"');
-    },
-    /**
-     * Whether the client supports webm video.
-     *
-     * @internal
-     * @return {String} "" or "maybe" or "probably"
-     */
-    getVideoWebm : function(){
-
-      if(!qx.bom.client.Html.getVideo()){
-
-        return "";
-      };
-      var v = document.createElement("video");
-      return v.canPlayType('video/webm; codecs="vp8, vorbis"');
-    },
-    /**
-     * Whether the client supports local storage.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if local storage is supported
-     */
-    getLocalStorage : function(){
-
-      try{
-
-        return window.localStorage != null;
-      } catch(exc) {
-
-        // Firefox Bug: Local execution of window.sessionStorage throws error
-        // see https://bugzilla.mozilla.org/show_bug.cgi?id=357323
-        return false;
-      };
-    },
-    /**
-     * Whether the client supports session storage.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if session storage is supported
-     */
-    getSessionStorage : function(){
-
-      try{
-
-        return window.sessionStorage != null;
-      } catch(exc) {
-
-        // Firefox Bug: Local execution of window.sessionStorage throws error
-        // see https://bugzilla.mozilla.org/show_bug.cgi?id=357323
-        return false;
-      };
-    },
-    /**
-     * Whether the client supports user data to persist data. This is only
-     * relevant for IE < 8.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if the user data is supported.
-     */
-    getUserDataStorage : function(){
-
-      var el = document.createElement("div");
-      el.style["display"] = "none";
-      document.getElementsByTagName("head")[0].appendChild(el);
-      var supported = false;
-      try{
-
-        el.addBehavior("#default#userdata");
-        el.load("qxtest");
-        supported = true;
-      } catch(e) {
-      };
-      document.getElementsByTagName("head")[0].removeChild(el);
-      return supported;
-    },
-    /**
-     * Whether the browser supports CSS class lists.
-     * https://developer.mozilla.org/en-US/docs/DOM/element.classList
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if class list is supported.
-     */
-    getClassList : function(){
-
-      return !!(document.documentElement.classList && qx.Bootstrap.getClass(document.documentElement.classList) === "DOMTokenList");
-    },
-    /**
-     * Checks if XPath could be used.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if xpath is supported.
-     */
-    getXPath : function(){
-
-      return !!document.evaluate;
-    },
-    /**
-     * Checks if XUL could be used.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if XUL is supported.
-     */
-    getXul : function(){
-
-      try{
-
-        document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "label");
-        return true;
-      } catch(e) {
-
-        return false;
-      };
-    },
-    /**
-     * Checks if SVG could be used
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if SVG is supported.
-     */
-    getSvg : function(){
-
-      return document.implementation && document.implementation.hasFeature && (document.implementation.hasFeature("org.w3c.dom.svg", "1.0") || document.implementation.hasFeature("http://www.w3.org/TR/SVG11/feature#BasicStructure", "1.1"));
-    },
-    /**
-     * Checks if VML is supported
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if VML is supported.
-     */
-    getVml : function(){
-
-      var el = document.createElement("div");
-      document.body.appendChild(el);
-      el.innerHTML = '<v:shape id="vml_flag1" adj="1" />';
-      el.firstChild.style.behavior = "url(#default#VML)";
-      var hasVml = typeof el.firstChild.adj == "object";
-      document.body.removeChild(el);
-      return hasVml;
-    },
-    /**
-     * Checks if canvas could be used
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if canvas is supported.
-     */
-    getCanvas : function(){
-
-      return !!window.CanvasRenderingContext2D;
-    },
-    /**
-     * Asynchronous check for using data urls.
-     *
-     * @internal
-     * @param callback {Function} The function which should be executed as
-     *   soon as the check is done.
-     */
-    getDataUrl : function(callback){
-
-      var data = new Image();
-      data.onload = data.onerror = function(){
-
-        // wrap that into a timeout because IE might execute it synchronously
-        window.setTimeout(function(){
-
-          callback.call(null, (data.width == 1 && data.height == 1));
-        }, 0);
-      };
-      data.src = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///ywAAAAAAQABAAACAUwAOw==";
-    },
-    /**
-     * Checks if dataset could be used
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if dataset is supported.
-     */
-    getDataset : function(){
-
-      return !!document.documentElement.dataset;
-    },
-    /**
-     * Check for element.contains
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if element.contains is supported
-     */
-    getContains : function(){
-
-      // "object" in IE6/7/8, "function" in IE9
-      return (typeof document.documentElement.contains !== "undefined");
-    },
-    /**
-     * Check for element.compareDocumentPosition
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if element.compareDocumentPosition is supported
-     */
-    getCompareDocumentPosition : function(){
-
-      return (typeof document.documentElement.compareDocumentPosition === "function");
-    },
-    /**
-     * Check for element.textContent. Legacy IEs do not support this, use
-     * innerText instead.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if textContent is supported
-     */
-    getTextContent : function(){
-
-      var el = document.createElement("span");
-      return (typeof el.textContent !== "undefined");
-    },
-    /**
-     * Check for a console object.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if a console is available.
-     */
-    getConsole : function(){
-
-      return typeof window.console !== "undefined";
-    },
-    /**
-     * Check for the <code>naturalHeight</code> and <code>naturalWidth</code>
-     * image element attributes.
-     *
-     * @internal
-     * @return {Boolean} <code>true</code> if both attributes are supported
-     */
-    getNaturalDimensions : function(){
-
-      var img = document.createElement("img");
-      return typeof img.naturalHeight === "number" && typeof img.naturalWidth === "number";
-    },
-    /**
-     * Check for HTML5 history manipulation support.
-    
-     * @internal
-     * @return {Boolean} <code>true</code> if the HTML5 history API is supported
-     */
-    getHistoryState : function(){
-
-      return (typeof window.onpopstate !== "undefined" && typeof window.history.replaceState !== "undefined" && typeof window.history.pushState !== "undefined");
-    },
-    /**
-     * Returns the name of the native object/function used to access the
-     * document's text selection.
-     *
-     * @return {String|null} <code>getSelection</code> if the standard window.getSelection
-     * function is available; <code>selection</code> if the MS-proprietary
-     * document.selection object is available; <code>null</code> if no known
-     * text selection API is available.
-     */
-    getSelection : function(){
-
-      if(typeof window.getSelection === "function"){
-
-        return "getSelection";
-      };
-      if(typeof document.selection === "object"){
-
-        return "selection";
-      };
-      return null;
-    }
-  },
-  defer : function(statics){
-
-    qx.core.Environment.add("html.webworker", statics.getWebWorker);
-    qx.core.Environment.add("html.filereader", statics.getFileReader);
-    qx.core.Environment.add("html.geolocation", statics.getGeoLocation);
-    qx.core.Environment.add("html.audio", statics.getAudio);
-    qx.core.Environment.add("html.audio.ogg", statics.getAudioOgg);
-    qx.core.Environment.add("html.audio.mp3", statics.getAudioMp3);
-    qx.core.Environment.add("html.audio.wav", statics.getAudioWav);
-    qx.core.Environment.add("html.audio.au", statics.getAudioAu);
-    qx.core.Environment.add("html.audio.aif", statics.getAudioAif);
-    qx.core.Environment.add("html.video", statics.getVideo);
-    qx.core.Environment.add("html.video.ogg", statics.getVideoOgg);
-    qx.core.Environment.add("html.video.h264", statics.getVideoH264);
-    qx.core.Environment.add("html.video.webm", statics.getVideoWebm);
-    qx.core.Environment.add("html.storage.local", statics.getLocalStorage);
-    qx.core.Environment.add("html.storage.session", statics.getSessionStorage);
-    qx.core.Environment.add("html.storage.userdata", statics.getUserDataStorage);
-    qx.core.Environment.add("html.classlist", statics.getClassList);
-    qx.core.Environment.add("html.xpath", statics.getXPath);
-    qx.core.Environment.add("html.xul", statics.getXul);
-    qx.core.Environment.add("html.canvas", statics.getCanvas);
-    qx.core.Environment.add("html.svg", statics.getSvg);
-    qx.core.Environment.add("html.vml", statics.getVml);
-    qx.core.Environment.add("html.dataset", statics.getDataset);
-    qx.core.Environment.addAsync("html.dataurl", statics.getDataUrl);
-    qx.core.Environment.add("html.element.contains", statics.getContains);
-    qx.core.Environment.add("html.element.compareDocumentPosition", statics.getCompareDocumentPosition);
-    qx.core.Environment.add("html.element.textcontent", statics.getTextContent);
-    qx.core.Environment.add("html.console", statics.getConsole);
-    qx.core.Environment.add("html.image.naturaldimensions", statics.getNaturalDimensions);
-    qx.core.Environment.add("html.history.state", statics.getHistoryState);
-    qx.core.Environment.add("html.selection", statics.getSelection);
-  }
-});
-
-/* ************************************************************************
-
-   qooxdoo - the new era of web development
-
-   http://qooxdoo.org
-
-   Copyright:
      2004-2010 1&1 Internet AG, Germany, http://www.1und1.de
 
    License:
@@ -8391,7 +9679,7 @@ qx.Bootstrap.define("qx.bom.client.Browser", {
   },
   defer : function(statics){
 
-    qx.core.Environment.add("browser.name", statics.getName),qx.core.Environment.add("browser.version", statics.getVersion),qx.core.Environment.add("browser.documentmode", statics.getDocumentMode),qx.core.Environment.add("browser.quirksmode", statics.getQuirksMode);
+    ;
   }
 });
 
@@ -8538,7 +9826,8 @@ qx.Bootstrap.define("qx.module.Css", {
       return this;
     },
     /**
-     * Removes multiple class names from each element in the collection
+     * Removes multiple class names from each element in the collection.
+     * Use {@link qx.module.Attribute#removeAttribute} to remove all classes.
      *
      * @attach {qxWeb}
      * @param names {String[]} List of class names to remove
@@ -9037,6 +10326,11 @@ qx.Bootstrap.define("qx.bom.Style", {
     __cssName : {
     },
     /**
+     * A reference to the native CSS.supports function (supportsCSS in Opera)
+     * @internal
+     */
+    __supports : null,
+    /**
      * Takes the name of a style property and returns the name the browser uses
      * for its implementation, which might include a vendor prefix.
      *
@@ -9095,8 +10389,9 @@ qx.Bootstrap.define("qx.bom.Style", {
       return cssName;
     },
     /**
-     * Detects CSS support by applying a style to a DOM element of the given type
-     * and verifying the result. Also checks for vendor-prefixed variants of the
+     * Detects CSS support by using the native CSS.supports function or by
+     * applying a style to a DOM element of the given type and verifying
+     * the result. Also checks for vendor-prefixed variants of the
      * value, e.g. "linear-gradient" -> "-webkit-linear-gradient". Returns the
      * (possibly vendor-prefixed) value if successful or <code>null</code> if
      * the property and/or value are not supported.
@@ -9111,23 +10406,38 @@ qx.Bootstrap.define("qx.bom.Style", {
      */
     getAppliedStyle : function(element, propertyName, value, prefixed){
 
+      var cssProperty = qx.bom.Style.getCssName(propertyName);
+      var win = qx.dom.Node.getWindow(element);
       var vendorPrefixes = (prefixed !== false) ? [null].concat(this.VENDOR_PREFIXES) : [null];
       for(var i = 0,l = vendorPrefixes.length;i < l;i++){
 
+        var supported = false;
         var prefixedVal = vendorPrefixes[i] ? "-" + vendorPrefixes[i].toLowerCase() + "-" + value : value;
-        // IE might throw an exception
-        try{
+        if(qx.bom.Style.__supports){
 
-          element.style[propertyName] = prefixedVal;
-          if(typeof element.style[propertyName] == "string" && element.style[propertyName] !== ""){
+          supported = qx.bom.Style.__supports.call(win, cssProperty, prefixedVal);
+        } else {
 
-            return prefixedVal;
-          };
-        } catch(ex) {
+          element.style.cssText += cssProperty + ":" + prefixedVal + ";";
+          supported = (typeof element.style[propertyName] == "string" && element.style[propertyName] !== "");
+        };
+        if(supported){
+
+          return prefixedVal;
         };
       };
       return null;
     }
+  },
+  defer : function(statics){
+
+    if(window.CSS && window.CSS.supports){
+
+      qx.bom.Style.__supports = window.CSS.supports.bind(window.CSS);
+    } else if(window.supportsCSS){
+
+      qx.bom.Style.__supports = window.supportsCSS.bind(window);
+    };
   }
 });
 
@@ -10918,268 +12228,6 @@ qx.Bootstrap.define("qx.bom.element.Style", {
    Authors:
      * Sebastian Werner (wpbasti)
 
-************************************************************************ */
-/**
- * Basic node creation and type detection
- */
-qx.Bootstrap.define("qx.dom.Node", {
-  /*
-  *****************************************************************************
-     STATICS
-  *****************************************************************************
-  */
-  statics : {
-    /*
-    ---------------------------------------------------------------------------
-      NODE TYPES
-    ---------------------------------------------------------------------------
-    */
-    /**
-     * @type {Map} Node type:
-     *
-     * * ELEMENT
-     * * ATTRIBUTE
-     * * TEXT
-     * * CDATA_SECTION
-     * * ENTITY_REFERENCE
-     * * ENTITY
-     * * PROCESSING_INSTRUCTION
-     * * COMMENT
-     * * DOCUMENT
-     * * DOCUMENT_TYPE
-     * * DOCUMENT_FRAGMENT
-     * * NOTATION
-     */
-    ELEMENT : 1,
-    ATTRIBUTE : 2,
-    TEXT : 3,
-    CDATA_SECTION : 4,
-    ENTITY_REFERENCE : 5,
-    ENTITY : 6,
-    PROCESSING_INSTRUCTION : 7,
-    COMMENT : 8,
-    DOCUMENT : 9,
-    DOCUMENT_TYPE : 10,
-    DOCUMENT_FRAGMENT : 11,
-    NOTATION : 12,
-    /*
-    ---------------------------------------------------------------------------
-      DOCUMENT ACCESS
-    ---------------------------------------------------------------------------
-    */
-    /**
-     * Returns the owner document of the given node
-     *
-     * @param node {Node|Document|Window} the node which should be tested
-     * @return {Document|null} The document of the given DOM node
-     */
-    getDocument : function(node){
-
-      return node.nodeType === this.DOCUMENT ? node : // is document already
-      node.ownerDocument || // is DOM node
-      node.document;
-    },
-    /**
-     * Returns the DOM2 <code>defaultView</code> (window).
-     *
-     * @param node {Node|Document|Window} node to inspect
-     * @return {Window} the <code>defaultView</code> of the given node
-     */
-    getWindow : function(node){
-
-      // is a window already
-      if(node.nodeType == null){
-
-        return node;
-      };
-      // jump to document
-      if(node.nodeType !== this.DOCUMENT){
-
-        node = node.ownerDocument;
-      };
-      // jump to window
-      return node.defaultView || node.parentWindow;
-    },
-    /**
-     * Returns the document element. (Logical root node)
-     *
-     * This is a convenience attribute that allows direct access to the child
-     * node that is the root element of the document. For HTML documents,
-     * this is the element with the tagName "HTML".
-     *
-     * @param node {Node|Document|Window} node to inspect
-     * @return {Element} document element of the given node
-     */
-    getDocumentElement : function(node){
-
-      return this.getDocument(node).documentElement;
-    },
-    /**
-     * Returns the body element. (Visual root node)
-     *
-     * This normally only makes sense for HTML documents. It returns
-     * the content area of the HTML document.
-     *
-     * @param node {Node|Document|Window} node to inspect
-     * @return {Element} document body of the given node
-     */
-    getBodyElement : function(node){
-
-      return this.getDocument(node).body;
-    },
-    /*
-    ---------------------------------------------------------------------------
-      TYPE TESTS
-    ---------------------------------------------------------------------------
-    */
-    /**
-     * Whether the given object is a DOM node
-     *
-     * @param node {Node} the node which should be tested
-     * @return {Boolean} true if the node is a DOM node
-     */
-    isNode : function(node){
-
-      return !!(node && node.nodeType != null);
-    },
-    /**
-     * Whether the given object is a DOM element node
-     *
-     * @param node {Node} the node which should be tested
-     * @return {Boolean} true if the node is a DOM element
-     */
-    isElement : function(node){
-
-      return !!(node && node.nodeType === this.ELEMENT);
-    },
-    /**
-     * Whether the given object is a DOM document node
-     *
-     * @param node {Node} the node which should be tested
-     * @return {Boolean} true when the node is a DOM document
-     */
-    isDocument : function(node){
-
-      return !!(node && node.nodeType === this.DOCUMENT);
-    },
-    /**
-     * Whether the given object is a DOM text node
-     *
-     * @param node {Node} the node which should be tested
-     * @return {Boolean} true if the node is a DOM text node
-     */
-    isText : function(node){
-
-      return !!(node && node.nodeType === this.TEXT);
-    },
-    /**
-     * Check whether the given object is a browser window object.
-     *
-     * @param obj {Object} the object which should be tested
-     * @return {Boolean} true if the object is a window object
-     */
-    isWindow : function(obj){
-
-      return !!(obj && obj.history && obj.location && obj.document);
-    },
-    /**
-     * Whether the node has the given node name
-     *
-     * @param node {Node} the node
-     * @param nodeName {String} the node name to check for
-     * @return {Boolean} Whether the node has the given node name
-     */
-    isNodeName : function(node, nodeName){
-
-      if(!nodeName || !node || !node.nodeName){
-
-        return false;
-      };
-      return nodeName.toLowerCase() == qx.dom.Node.getName(node);
-    },
-    /*
-    ---------------------------------------------------------------------------
-      UTILITIES
-    ---------------------------------------------------------------------------
-    */
-    /**
-     * Get the node name as lower case string
-     *
-     * @param node {Node} the node
-     * @return {String} the node name
-     */
-    getName : function(node){
-
-      if(!node || !node.nodeName){
-
-        return null;
-      };
-      return node.nodeName.toLowerCase();
-    },
-    /**
-     * Returns the text content of an node where the node may be of node type
-     * NODE_ELEMENT, NODE_ATTRIBUTE, NODE_TEXT or NODE_CDATA
-     *
-     * @param node {Node} the node from where the search should start.
-     *     If the node has subnodes the text contents are recursively retreived and joined.
-     * @return {String} the joined text content of the given node or null if not appropriate.
-     * @signature function(node)
-     */
-    getText : function(node){
-
-      if(!node || !node.nodeType){
-
-        return null;
-      };
-      switch(node.nodeType){case 1:
-      // NODE_ELEMENT
-      var i,a = [],nodes = node.childNodes,length = nodes.length;
-      for(i = 0;i < length;i++){
-
-        a[i] = this.getText(nodes[i]);
-      };
-      return a.join("");case 2:// NODE_ATTRIBUTE
-      case 3:// NODE_TEXT
-      case 4:
-      // CDATA
-      return node.nodeValue;};
-      return null;
-    },
-    /**
-     * Checks if the given node is a block node
-     *
-     * @param node {Node} Node
-     * @return {Boolean} whether it is a block node
-     */
-    isBlockNode : function(node){
-
-      if(!qx.dom.Node.isElement(node)){
-
-        return false;
-      };
-      node = qx.dom.Node.getName(node);
-      return /^(body|form|textarea|fieldset|ul|ol|dl|dt|dd|li|div|hr|p|h[1-6]|quote|pre|table|thead|tbody|tfoot|tr|td|th|iframe|address|blockquote)$/.test(node);
-    }
-  }
-});
-
-/* ************************************************************************
-
-   qooxdoo - the new era of web development
-
-   http://qooxdoo.org
-
-   Copyright:
-     2004-2008 1&1 Internet AG, Germany, http://www.1und1.de
-
-   License:
-     LGPL: http://www.gnu.org/licenses/lgpl.html
-     EPL: http://www.eclipse.org/org/documents/epl-v10.php
-     See the LICENSE file in the project's top-level directory for details.
-
-   Authors:
-     * Sebastian Werner (wpbasti)
-
    ======================================================================
 
    This class contains code based on the following work:
@@ -12760,21 +13808,6 @@ qx.Bootstrap.define("qx.bom.Stylesheet", {
 qx.Bootstrap.define("qx.dom.Element", {
   statics : {
     /**
-     * @type {Map} A list of all attributes which needs to be part of the initial element to work correctly
-     *
-     * @internal
-     */
-    __initialAttributes : {
-      "onload" : true,
-      "onpropertychange" : true,
-      "oninput" : true,
-      "onchange" : true,
-      "name" : true,
-      "type" : true,
-      "checked" : true,
-      "disabled" : true
-    },
-    /**
      * Whether the given <code>child</code> is a child of <code>parent</code>
      *
      * @param parent {Element} parent element
@@ -13043,49 +14076,6 @@ qx.Bootstrap.define("qx.dom.Element", {
     __helperElement : {
     },
     /**
-     * Saves whether a helper element is needed for each window.
-     *
-     * @internal
-     */
-    __allowMarkup : {
-    },
-    /**
-     * Detects if the DOM support a <code>document.createElement</code> call with a
-     * <code>String</code> as markup like:
-     *
-     * <pre class="javascript">
-     * document.createElement("<INPUT TYPE='RADIO' NAME='RADIOTEST' VALUE='Second Choice'>");
-     * </pre>
-     *
-     * Element creation with markup is not standard compatible with Document Object Model (Core) Level 1, but
-     * Internet Explorer supports it. With an exception that IE9 in IE9 standard mode is standard compatible and
-     * doesn't support element creation with markup.
-     *
-     * @param win {Window?} Window to check for
-     * @return {Boolean} <code>true</code> if the DOM supports it, <code>false</code> otherwise.
-     */
-    _allowCreationWithMarkup : function(win){
-
-      if(!win){
-
-        win = window;
-      };
-      // key is needed to allow using different windows
-      var key = win.location.href;
-      if(qx.dom.Element.__allowMarkup[key] == undefined){
-
-        try{
-
-          win.document.createElement("<INPUT TYPE='RADIO' NAME='RADIOTEST' VALUE='Second Choice'>");
-          qx.dom.Element.__allowMarkup[key] = true;
-        } catch(e) {
-
-          qx.dom.Element.__allowMarkup[key] = false;
-        };
-      };
-      return qx.dom.Element.__allowMarkup[key];
-    },
-    /**
      * Creates and returns a DOM helper element.
      *
      * @param win {Window?} Window to create the element for
@@ -13114,13 +14104,6 @@ qx.Bootstrap.define("qx.dom.Element", {
     /**
      * Creates a DOM element.
      *
-     * Attributes may be given directly with this call. This is critical
-     * for some attributes e.g. name, type, ... in many clients.
-     *
-     * Depending on the kind of attributes passed, <code>innerHTML</code> may be
-     * used internally to assemble the element. Please make sure you understand
-     * the security implications. See {@link qx.bom.Html#clean}.
-     *
      * @param name {String} Tag name of the element
      * @param attributes {Map?} Map of attributes to apply
      * @param win {Window?} Window to create the element for
@@ -13136,39 +14119,10 @@ qx.Bootstrap.define("qx.dom.Element", {
 
         throw new Error("The tag name is missing!");
       };
-      var initial = this.__initialAttributes;
-      var attributesHtml = "";
+      var element = win.document.createElement(name);
       for(var key in attributes){
 
-        if(initial[key]){
-
-          attributesHtml += key + "='" + attributes[key] + "' ";
-        };
-      };
-      var element;
-      // If specific attributes are defined we need to process
-      // the element creation in a more complex way.
-      if(attributesHtml != ""){
-
-        if(qx.dom.Element._allowCreationWithMarkup(win)){
-
-          element = win.document.createElement("<" + name + " " + attributesHtml + ">");
-        } else {
-
-          var helper = qx.dom.Element.getHelperElement(win);
-          helper.innerHTML = "<" + name + " " + attributesHtml + "></" + name + ">";
-          element = helper.firstChild;
-        };
-      } else {
-
-        element = win.document.createElement(name);
-      };
-      for(var key in attributes){
-
-        if(!initial[key]){
-
-          qx.bom.element.Attribute.set(element, key, attributes[key]);
-        };
+        qx.bom.element.Attribute.set(element, key, attributes[key]);
       };
       return element;
     },
@@ -13526,6 +14480,23 @@ qx.Bootstrap.define("qx.bom.client.Stylesheet", {
  * *bind*:
  * <a href="https://developer.mozilla.org/en-US/docs/JavaScript/Reference/Global_Objects/Function/bind">MDN documentation</a> |
  * <a href="http://es5.github.com/#x15.3.4.5">Annotated ES5 Spec</a>
+ *
+ * Example for the <code>bind</code> method:
+ * <pre class='javascript'>
+ * // sample code, assumes the used variables are already defined
+ * 
+ * // the listener method demonstrates how to pass dynamic values
+ * // to a method using 'bind'
+ * var changeValueListener = function(value, event) {
+ *   // value is passed by the 'bind' method: its value is 'myArray[i]'
+ *   // second argument is passed by the 'on' method: its value is a event object
+ *   // 'this' is pointing to 'myComponent', since the first argument of 'bind' defines the context of the function call
+ * };
+ * var myArray = [ 0, 2, 4, 6 ];
+ * for (var i=0, j=myArray.length; i&lt;j; i++) {
+ *   myComponent.on("changeValue", changeValueListener.bind(myComponent, myArray[i]));
+ * }
+ * </pre>
  */
 qx.Bootstrap.define("qx.lang.normalize.Function", {
   defer : function(){
@@ -13619,9 +14590,9 @@ qx.Bootstrap.define("qx.lang.normalize.Function", {
         // 16. Else set the length own property of F to 0.
         // 17. Set the attributes of the length own property of F to the values
         //   specified in 15.3.5.1.
-        // TODO
+        // (Not implemented but in the spec)
         // 18. Set the [[Extensible]] internal property of F to true.
-        // TODO
+        // (Not implemented but in the spec)
         // 19. Let thrower be the [[ThrowTypeError]] function Object (13.2.3).
         // 20. Call the [[DefineOwnProperty]] internal method of F with
         //   arguments "caller", PropertyDescriptor {[[Get]]: thrower, [[Set]]:
@@ -14124,6 +15095,31 @@ qx.Bootstrap.define("qx.module.Event", {
       };
     },
     /**
+     * Bind one or two callbacks to the collection. 
+     * If only the first callback is defined the collection
+     * does react on 'mouseover' only.
+     *
+     * @attach {qxWeb}
+     *
+     * @param callbackIn {Function} callback when hovering over 
+     * @param callbackOut {Function?} callback when hovering out 
+     * @return {qxWeb} The collection for chaining
+     */
+    hover : function(callbackIn, callbackOut){
+
+      var collection;
+      for(var j = 0;j < this.length;j++){
+
+        collection = qxWeb(this[j]);
+        collection.on("mouseover", callbackIn, collection);
+        if(qx.lang.Type.isFunction(callbackOut)){
+
+          collection.on("mouseout", callbackOut, collection);
+        };
+      };
+      return this;
+    },
+    /**
      * Registers a normalization function for the given event types. Listener
      * callbacks for these types will be called with the return value of the
      * normalization function instead of the regular event object.
@@ -14294,7 +15290,8 @@ qx.Bootstrap.define("qx.module.Event", {
       "once" : statics.once,
       "emit" : statics.emit,
       "hasListener" : statics.hasListener,
-      "copyEventsTo" : statics.copyEventsTo
+      "copyEventsTo" : statics.copyEventsTo,
+      "hover" : statics.hover
     });
     qxWeb.$attachStatic({
       "ready" : statics.ready,
@@ -14714,8 +15711,6 @@ qx.Bootstrap.define("qx.bom.client.CssTransition", {
 
 ************************************************************************ */
 /**
- * EXPERIMENTAL - NOT READY FOR PRODUCTION
- *
  * Basic implementation for an event emitter. This supplies a basic and
  * minimalistic event mechanism.
  */
@@ -15795,8 +16790,7 @@ qx.Bootstrap.define("qx.module.event.Mouse", {
 qx.Bootstrap.define("qx.event.Messaging", {
   construct : function(){
 
-    this._listener = {
-    },this.__listenerIdCount = 0;
+    ,;
     this.__channelToIdMapping = {
     };
   },
@@ -15877,6 +16871,30 @@ qx.Bootstrap.define("qx.event.Messaging", {
       var listener = this._listener[channel];
       delete listener[id];
       delete this.__channelToIdMapping[id];
+    },
+    /**
+     * Checks if a listener is registered for the given path in the given channel.
+     *
+     * @param channel {String} The channel of the message.
+     * @param path {String} The path to check.
+     * @return {Boolean} Whether a listener is registered.
+     */
+    has : function(channel, path){
+
+      var listeners = this._listener[channel];
+      if(!listeners || qx.lang.Object.isEmpty(listeners)){
+
+        return false;
+      };
+      for(var id in listeners){
+
+        var listener = listeners[id];
+        if(listener.regExp.test(path)){
+
+          return true;
+        };
+      };
+      return false;
     },
     /**
      * Sends a message on the given channel and informs all matching route handlers.
@@ -18184,7 +19202,7 @@ qx.Bootstrap.define("qx.bom.storage.Web", {
    http://qooxdoo.org
 
    Copyright:
-     2004-2008 1&1 Internet AG, Germany, http://www.1und1.de
+     2004-2013 1&1 Internet AG, Germany, http://www.1und1.de
 
    License:
      LGPL: http://www.gnu.org/licenses/lgpl.html
@@ -18193,37 +19211,53 @@ qx.Bootstrap.define("qx.bom.storage.Web", {
 
    Authors:
      * Fabian Jakobs (fjakobs)
-   ________________________________________________________________________
+     * Richard Sternagel (rsternagel)
 
-   This class contains code based on the following work:
+   ======================================================================
 
-    http://www.JSON.org/json2.js
-    2009-06-29
+   This class contains code from:
 
-    Public Domain.
+   * JSON 3 (v3.2.5)
 
-    NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
+     Code:
+       https://github.com/bestiejs/json3
 
-    See http://www.JSON.org/js.html
+     Copyright:
+       (c) 2012-2013, Kit Cambridge
+
+     License:
+       MIT: https://raw.github.com/bestiejs/json3/gh-pages/LICENSE
+
+   ----------------------------------------------------------------------
+
+    Copyright (c) 2012-2013 Kit Cambridge.
+    http://kitcambridge.be/
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy of
+    this software and associated documentation files (the "Software"), to deal in
+    the Software without restriction, including without limitation the rights to
+    use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is furnished to do
+    so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
 
 ************************************************************************ */
 /**
- * JSON (JavaScript Object Notation) parser, serializer for qooxdoo
- *
- * This class implements EcmaScript 3.1 JSON support.
- *
- * http://wiki.ecmascript.org/doku.php?id=es3.1:json_support
- *
- * If the browser supports native JSON the browser implementation is used.
+ * Exposes (potentially polyfilled or patched) window.JSON to qooxdoo
+ * (enabled by <a href="https://github.com/bestiejs/json3">JSON 3</a>).
  */
 qx.Bootstrap.define("qx.lang.Json", {
   statics : {
-    /**
-     * @type {JSON} The JSON object to use. If the browser has native JSON support
-     *   this member points to <code>window.JSON</code>. Otherwise it points to
-     *   the qooxdoo implementation {@link JsonImpl}.
-     */
-    JSON : window.JSON,
     /**
      * This method produces a JSON text from a JavaScript value.
      *
@@ -18313,7 +19347,7 @@ qx.Bootstrap.define("qx.lang.Json", {
      * @return {String} The JSON string of the value
      */
     stringify : null,
-    // will be set in the defer block
+    // will be set after the polyfill
     /**
      * This method parses a JSON text to produce an object or array.
      * It can throw a SyntaxError exception.
@@ -18366,13 +19400,967 @@ qx.Bootstrap.define("qx.lang.Json", {
      * @return {Object} The parsed JSON object
      */
     parse : null
-  },
-  defer : function(statics){
-
-    statics.stringify = statics.JSON.stringify;
-    statics.parse = statics.JSON.parse;
   }
 });
+/*! JSON v3.2.5 | http://bestiejs.github.io/json3 | Copyright 2012-2013, Kit Cambridge | http://kit.mit-license.org */
+/**
+ * @ignore(define.*, exports)
+ * @lint ignoreNoLoopBlock()
+ */
+(function(window){
+
+  // Convenience aliases.
+  var getClass = {
+  }.toString,isProperty,forEach,undef;
+  // Detect the `define` function exposed by asynchronous module loaders. The
+  // strict `define` check is necessary for compatibility with `r.js`.
+  var isLoader = typeof define === "function" && define.amd,JSON3 = typeof exports == "object" && exports;
+  if(JSON3 || isLoader){
+
+    if(typeof JSON == "object" && JSON){
+
+      // Delegate to the native `stringify` and `parse` implementations in
+      // asynchronous module loaders and CommonJS environments.
+      if(JSON3){
+
+        JSON3.stringify = JSON.stringify;
+        JSON3.parse = JSON.parse;
+      } else {
+
+        JSON3 = JSON;
+      };
+    } else if(isLoader){
+
+      JSON3 = window.JSON = {
+      };
+    };
+  } else {
+
+    // Export for web browsers and JavaScript engines.
+    JSON3 = window.JSON || (window.JSON = {
+    });
+  };
+  // Test the `Date#getUTC*` methods. Based on work by @Yaffle.
+  var isExtended = new Date(-3509827334573292);
+  try{
+
+    // The `getUTCFullYear`, `Month`, and `Date` methods return nonsensical
+    // results for certain dates in Opera >= 10.53.
+    isExtended = isExtended.getUTCFullYear() == -109252 && isExtended.getUTCMonth() === 0 && isExtended.getUTCDate() === 1 && // Safari < 2.0.2 stores the internal millisecond time value correctly,
+    // but clips the values returned by the date methods to the range of
+    // signed 32-bit integers ([-2 ** 31, 2 ** 31 - 1]).
+    isExtended.getUTCHours() == 10 && isExtended.getUTCMinutes() == 37 && isExtended.getUTCSeconds() == 6 && isExtended.getUTCMilliseconds() == 708;
+  } catch(exception) {
+  };
+  // Internal: Determines whether the native `JSON.stringify` and `parse`
+  // implementations are spec-compliant. Based on work by Ken Snyder.
+  function has(name){
+
+    if(name == "bug-string-char-index"){
+
+      // IE <= 7 doesn't support accessing string characters using square
+      // bracket notation. IE 8 only supports this for primitives.
+      return "a"[0] != "a";
+    };
+    var value,serialized = '{"a":[1,true,false,null,"\\u0000\\b\\n\\f\\r\\t"]}',isAll = name == "json";
+    if(isAll || name == "json-stringify" || name == "json-parse"){
+
+      // Test `JSON.stringify`.
+      if(name == "json-stringify" || isAll){
+
+        var stringify = JSON3.stringify,stringifySupported = typeof stringify == "function" && isExtended;
+        if(stringifySupported){
+
+          // A test function object with a custom `toJSON` method.
+          (value = function(){
+
+            return 1;
+          }).toJSON = value;
+          try{
+
+            stringifySupported = // Firefox 3.1b1 and b2 serialize string, number, and boolean
+            // primitives as object literals.
+            stringify(0) === "0" && // FF 3.1b1, b2, and JSON 2 serialize wrapped primitives as object
+            // literals.
+            stringify(new Number()) === "0" && stringify(new String()) == '""' && // FF 3.1b1, 2 throw an error if the value is `null`, `undefined`, or
+            // does not define a canonical JSON representation (this applies to
+            // objects with `toJSON` properties as well, *unless* they are nested
+            // within an object or array).
+            stringify(getClass) === undef && // IE 8 serializes `undefined` as `"undefined"`. Safari <= 5.1.7 and
+            // FF 3.1b3 pass this test.
+            stringify(undef) === undef && // Safari <= 5.1.7 and FF 3.1b3 throw `Error`s and `TypeError`s,
+            // respectively, if the value is omitted entirely.
+            stringify() === undef && // FF 3.1b1, 2 throw an error if the given value is not a number,
+            // string, array, object, Boolean, or `null` literal. This applies to
+            // objects with custom `toJSON` methods as well, unless they are nested
+            // inside object or array literals. YUI 3.0.0b1 ignores custom `toJSON`
+            // methods entirely.
+            stringify(value) === "1" && stringify([value]) == "[1]" && // Prototype <= 1.6.1 serializes `[undefined]` as `"[]"` instead of
+            // `"[null]"`.
+            stringify([undef]) == "[null]" && // YUI 3.0.0b1 fails to serialize `null` literals.
+            stringify(null) == "null" && // FF 3.1b1, 2 halts serialization if an array contains a function:
+            // `[1, true, getClass, 1]` serializes as "[1,true,],". These versions
+            // of Firefox also allow trailing commas in JSON objects and arrays.
+            // FF 3.1b3 elides non-JSON values from objects and arrays, unless they
+            // define custom `toJSON` methods.
+            stringify([undef, getClass, null]) == "[null,null,null]" && // Simple serialization test. FF 3.1b1 uses Unicode escape sequences
+            // where character escape codes are expected (e.g., `\b` => `\u0008`).
+            stringify({
+              "a" : [value, true, false, null, "\x00\b\n\f\r\t"]
+            }) == serialized && // FF 3.1b1 and b2 ignore the `filter` and `width` arguments.
+            stringify(null, value) === "1" && stringify([1, 2], null, 1) == "[\n 1,\n 2\n]" && // JSON 2, Prototype <= 1.7, and older WebKit builds incorrectly
+            // serialize extended years.
+            stringify(new Date(-8.64e15)) == '"-271821-04-20T00:00:00.000Z"' && // The milliseconds are optional in ES 5, but required in 5.1.
+            stringify(new Date(8.64e15)) == '"+275760-09-13T00:00:00.000Z"' && // Firefox <= 11.0 incorrectly serializes years prior to 0 as negative
+            // four-digit years instead of six-digit years. Credits: @Yaffle.
+            stringify(new Date(-621987552e5)) == '"-000001-01-01T00:00:00.000Z"' && // Safari <= 5.1.5 and Opera >= 10.53 incorrectly serialize millisecond
+            // values less than 1000. Credits: @Yaffle.
+            stringify(new Date(-1)) == '"1969-12-31T23:59:59.999Z"';
+          } catch(exception) {
+
+            stringifySupported = false;
+          };
+        };
+        if(!isAll){
+
+          return stringifySupported;
+        };
+      };
+      // Test `JSON.parse`.
+      if(name == "json-parse" || isAll){
+
+        var parse = JSON3.parse;
+        if(typeof parse == "function"){
+
+          try{
+
+            // FF 3.1b1, b2 will throw an exception if a bare literal is provided.
+            // Conforming implementations should also coerce the initial argument to
+            // a string prior to parsing.
+            if(parse("0") === 0 && !parse(false)){
+
+              // Simple parsing test.
+              value = parse(serialized);
+              var parseSupported = value["a"].length == 5 && value["a"][0] === 1;
+              if(parseSupported){
+
+                try{
+
+                  // Safari <= 5.1.2 and FF 3.1b1 allow unescaped tabs in strings.
+                  parseSupported = !parse('"\t"');
+                } catch(exception) {
+                };
+                if(parseSupported){
+
+                  try{
+
+                    // FF 4.0 and 4.0.1 allow leading `+` signs, and leading and
+                    // trailing decimal points. FF 4.0, 4.0.1, and IE 9-10 also
+                    // allow certain octal literals.
+                    parseSupported = parse("01") !== 1;
+                  } catch(exception) {
+                  };
+                };
+              };
+            };
+          } catch(exception) {
+
+            parseSupported = false;
+          };
+        };
+        if(!isAll){
+
+          return parseSupported;
+        };
+      };
+      return stringifySupported && parseSupported;
+    };
+  };
+  if(!has("json")){
+
+    // Common `[[Class]]` name aliases.
+    var functionClass = "[object Function]";
+    var dateClass = "[object Date]";
+    var numberClass = "[object Number]";
+    var stringClass = "[object String]";
+    var arrayClass = "[object Array]";
+    var booleanClass = "[object Boolean]";
+    // Detect incomplete support for accessing string characters by index.
+    var charIndexBuggy = has("bug-string-char-index");
+    // Define additional utility methods if the `Date` methods are buggy.
+    if(!isExtended){
+
+      var floor = Math.floor;
+      // A mapping between the months of the year and the number of days between
+      // January 1st and the first of the respective month.
+      var Months = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
+      // Internal: Calculates the number of days between the Unix epoch and the
+      // first day of the given month.
+      var getDay = function(year, month){
+
+        return Months[month] + 365 * (year - 1970) + floor((year - 1969 + (month = +(month > 1))) / 4) - floor((year - 1901 + month) / 100) + floor((year - 1601 + month) / 400);
+      };
+    };
+    // Internal: Determines if a property is a direct property of the given
+    // object. Delegates to the native `Object#hasOwnProperty` method.
+    if(!(isProperty = {
+    }.hasOwnProperty)){
+
+      isProperty = function(property){
+
+        var members = {
+        },constructor;
+        if((members.__proto__ = null, members.__proto__ = {
+          // The *proto* property cannot be set multiple times in recent
+          // versions of Firefox and SeaMonkey.
+          "toString" : 1
+        }, members).toString != getClass){
+
+          // Safari <= 2.0.3 doesn't implement `Object#hasOwnProperty`, but
+          // supports the mutable *proto* property.
+          isProperty = function(property){
+
+            // Capture and break the object's prototype chain (see section 8.6.2
+            // of the ES 5.1 spec). The parenthesized expression prevents an
+            // unsafe transformation by the Closure Compiler.
+            var original = this.__proto__,result = property in (this.__proto__ = null, this);
+            // Restore the original prototype chain.
+            this.__proto__ = original;
+            return result;
+          };
+        } else {
+
+          // Capture a reference to the top-level `Object` constructor.
+          constructor = members.constructor;
+          // Use the `constructor` property to simulate `Object#hasOwnProperty` in
+          // other environments.
+          isProperty = function(property){
+
+            var parent = (this.constructor || constructor).prototype;
+            return property in this && !(property in parent && this[property] === parent[property]);
+          };
+        };
+        members = null;
+        return isProperty.call(this, property);
+      };
+    };
+    // Internal: A set of primitive types used by `isHostType`.
+    var PrimitiveTypes = {
+      'boolean' : 1,
+      'number' : 1,
+      'string' : 1,
+      'undefined' : 1
+    };
+    // Internal: Determines if the given object `property` value is a
+    // non-primitive.
+    var isHostType = function(object, property){
+
+      var type = typeof object[property];
+      return type == 'object' ? !!object[property] : !PrimitiveTypes[type];
+    };
+    // Internal: Normalizes the `for...in` iteration algorithm across
+    // environments. Each enumerated key is yielded to a `callback` function.
+    forEach = function(object, callback){
+
+      var size = 0,Properties,members,property,forEach;
+      // Tests for bugs in the current environment's `for...in` algorithm. The
+      // `valueOf` property inherits the non-enumerable flag from
+      // `Object.prototype` in older versions of IE, Netscape, and Mozilla.
+      (Properties = function(){
+
+        this.valueOf = 0;
+      }).prototype.valueOf = 0;
+      // Iterate over a new instance of the `Properties` class.
+      members = new Properties();
+      for(property in members){
+
+        // Ignore all properties inherited from `Object.prototype`.
+        if(isProperty.call(members, property)){
+
+          size++;
+        };
+      };
+      Properties = members = null;
+      // Normalize the iteration algorithm.
+      if(!size){
+
+        // A list of non-enumerable properties inherited from `Object.prototype`.
+        members = ["valueOf", "toString", "toLocaleString", "propertyIsEnumerable", "isPrototypeOf", "hasOwnProperty", "constructor"];
+        // IE <= 8, Mozilla 1.0, and Netscape 6.2 ignore shadowed non-enumerable
+        // properties.
+        forEach = function(object, callback){
+
+          var isFunction = getClass.call(object) == functionClass,property,length;
+          var hasProperty = !isFunction && typeof object.constructor != 'function' && isHostType(object, 'hasOwnProperty') ? object.hasOwnProperty : isProperty;
+          for(property in object){
+
+            // Gecko <= 1.0 enumerates the `prototype` property of functions under
+            // certain conditions; IE does not.
+            if(!(isFunction && property == "prototype") && hasProperty.call(object, property)){
+
+              callback(property);
+            };
+          };
+          // Manually invoke the callback for each non-enumerable property.
+          for(length = members.length;property = members[--length];hasProperty.call(object, property) && callback(property));
+        };
+      } else if(size == 2){
+
+        // Safari <= 2.0.4 enumerates shadowed properties twice.
+        forEach = function(object, callback){
+
+          // Create a set of iterated properties.
+          var members = {
+          },isFunction = getClass.call(object) == functionClass,property;
+          for(property in object){
+
+            // Store each property name to prevent double enumeration. The
+            // `prototype` property of functions is not enumerated due to cross-
+            // environment inconsistencies.
+            if(!(isFunction && property == "prototype") && !isProperty.call(members, property) && (members[property] = 1) && isProperty.call(object, property)){
+
+              callback(property);
+            };
+          };
+        };
+      } else {
+
+        // No bugs detected; use the standard `for...in` algorithm.
+        forEach = function(object, callback){
+
+          var isFunction = getClass.call(object) == functionClass,property,isConstructor;
+          for(property in object){
+
+            if(!(isFunction && property == "prototype") && isProperty.call(object, property) && !(isConstructor = property === "constructor")){
+
+              callback(property);
+            };
+          };
+          // Manually invoke the callback for the `constructor` property due to
+          // cross-environment inconsistencies.
+          if(isConstructor || isProperty.call(object, (property = "constructor"))){
+
+            callback(property);
+          };
+        };
+      };
+      return forEach(object, callback);
+    };
+    // Public: Serializes a JavaScript `value` as a JSON string. The optional
+    // `filter` argument may specify either a function that alters how object and
+    // array members are serialized, or an array of strings and numbers that
+    // indicates which properties should be serialized. The optional `width`
+    // argument may be either a string or number that specifies the indentation
+    // level of the output.
+    if(!has("json-stringify")){
+
+      // Internal: A map of control characters and their escaped equivalents.
+      var Escapes = {
+        '92' : "\\\\",
+        '34' : '\\"',
+        '8' : "\\b",
+        '12' : "\\f",
+        '10' : "\\n",
+        '13' : "\\r",
+        '9' : "\\t"
+      };
+      // Internal: Converts `value` into a zero-padded string such that its
+      // length is at least equal to `width`. The `width` must be <= 6.
+      var leadingZeroes = "000000";
+      var toPaddedString = function(width, value){
+
+        // The `|| 0` expression is necessary to work around a bug in
+        // Opera <= 7.54u2 where `0 == -0`, but `String(-0) !== "0"`.
+        return (leadingZeroes + (value || 0)).slice(-width);
+      };
+      // Internal: Double-quotes a string `value`, replacing all ASCII control
+      // characters (characters with code unit values between 0 and 31) with
+      // their escaped equivalents. This is an implementation of the
+      // `Quote(value)` operation defined in ES 5.1 section 15.12.3.
+      var unicodePrefix = "\\u00";
+      var quote = function(value){
+
+        var result = '"',index = 0,length = value.length,isLarge = length > 10 && charIndexBuggy,symbols;
+        if(isLarge){
+
+          symbols = value.split("");
+        };
+        for(;index < length;index++){
+
+          var charCode = value.charCodeAt(index);
+          // If the character is a control character, append its Unicode or
+          // shorthand escape sequence; otherwise, append the character as-is.
+          switch(charCode){case 8:case 9:case 10:case 12:case 13:case 34:case 92:
+          result += Escapes[charCode];
+          break;default:
+          if(charCode < 32){
+
+            result += unicodePrefix + toPaddedString(2, charCode.toString(16));
+            break;
+          };
+          result += isLarge ? symbols[index] : charIndexBuggy ? value.charAt(index) : value[index];};
+        };
+        return result + '"';
+      };
+      // Internal: Recursively serializes an object. Implements the
+      // `Str(key, holder)`, `JO(value)`, and `JA(value)` operations.
+      var serialize = function(property, object, callback, properties, whitespace, indentation, stack){
+
+        var value = object[property],className,year,month,date,time,hours,minutes,seconds,milliseconds,results,element,index,length,prefix,hasMembers,result;
+        try{
+
+          // Necessary for host object support.
+          value = object[property];
+        } catch(exception) {
+        };
+        if(typeof value == "object" && value){
+
+          className = getClass.call(value);
+          if(className == dateClass && !isProperty.call(value, "toJSON")){
+
+            if(value > -1 / 0 && value < 1 / 0){
+
+              // Dates are serialized according to the `Date#toJSON` method
+              // specified in ES 5.1 section 15.9.5.44. See section 15.9.1.15
+              // for the ISO 8601 date time string format.
+              if(getDay){
+
+                // Manually compute the year, month, date, hours, minutes,
+                // seconds, and milliseconds if the `getUTC*` methods are
+                // buggy. Adapted from @Yaffle's `date-shim` project.
+                date = floor(value / 864e5);
+                for(year = floor(date / 365.2425) + 1970 - 1;getDay(year + 1, 0) <= date;year++);
+                for(month = floor((date - getDay(year, 0)) / 30.42);getDay(year, month + 1) <= date;month++);
+                date = 1 + date - getDay(year, month);
+                // The `time` value specifies the time within the day (see ES
+                // 5.1 section 15.9.1.2). The formula `(A % B + B) % B` is used
+                // to compute `A modulo B`, as the `%` operator does not
+                // correspond to the `modulo` operation for negative numbers.
+                time = (value % 864e5 + 864e5) % 864e5;
+                // The hours, minutes, seconds, and milliseconds are obtained by
+                // decomposing the time within the day. See section 15.9.1.10.
+                hours = floor(time / 36e5) % 24;
+                minutes = floor(time / 6e4) % 60;
+                seconds = floor(time / 1e3) % 60;
+                milliseconds = time % 1e3;
+              } else {
+
+                year = value.getUTCFullYear();
+                month = value.getUTCMonth();
+                date = value.getUTCDate();
+                hours = value.getUTCHours();
+                minutes = value.getUTCMinutes();
+                seconds = value.getUTCSeconds();
+                milliseconds = value.getUTCMilliseconds();
+              };
+              // Serialize extended years correctly.
+              value = (year <= 0 || year >= 1e4 ? (year < 0 ? "-" : "+") + toPaddedString(6, year < 0 ? -year : year) : toPaddedString(4, year)) + "-" + toPaddedString(2, month + 1) + "-" + toPaddedString(2, date) + // Months, dates, hours, minutes, and seconds should have two
+              // digits; milliseconds should have three.
+              "T" + toPaddedString(2, hours) + ":" + toPaddedString(2, minutes) + ":" + toPaddedString(2, seconds) + // Milliseconds are optional in ES 5.0, but required in 5.1.
+              "." + toPaddedString(3, milliseconds) + "Z";
+            } else {
+
+              value = null;
+            };
+          } else if(typeof value.toJSON == "function" && ((className != numberClass && className != stringClass && className != arrayClass) || isProperty.call(value, "toJSON"))){
+
+            // Prototype <= 1.6.1 adds non-standard `toJSON` methods to the
+            // `Number`, `String`, `Date`, and `Array` prototypes. JSON 3
+            // ignores all `toJSON` methods on these objects unless they are
+            // defined directly on an instance.
+            value = value.toJSON(property);
+          };
+        };
+        if(callback){
+
+          // If a replacement function was provided, call it to obtain the value
+          // for serialization.
+          value = callback.call(object, property, value);
+        };
+        if(value === null){
+
+          return "null";
+        };
+        className = getClass.call(value);
+        if(className == booleanClass){
+
+          // Booleans are represented literally.
+          return "" + value;
+        } else if(className == numberClass){
+
+          // JSON numbers must be finite. `Infinity` and `NaN` are serialized as
+          // `"null"`.
+          return value > -1 / 0 && value < 1 / 0 ? "" + value : "null";
+        } else if(className == stringClass){
+
+          // Strings are double-quoted and escaped.
+          return quote("" + value);
+        };;
+        // Recursively serialize objects and arrays.
+        if(typeof value == "object"){
+
+          // Check for cyclic structures. This is a linear search; performance
+          // is inversely proportional to the number of unique nested objects.
+          for(length = stack.length;length--;){
+
+            if(stack[length] === value){
+
+              // Cyclic structures cannot be serialized by `JSON.stringify`.
+              throw TypeError();
+            };
+          };
+          // Add the object to the stack of traversed objects.
+          stack.push(value);
+          results = [];
+          // Save the current indentation level and indent one additional level.
+          prefix = indentation;
+          indentation += whitespace;
+          if(className == arrayClass){
+
+            // Recursively serialize array elements.
+            for(index = 0,length = value.length;index < length;hasMembers || (hasMembers = true),index++){
+
+              element = serialize(index, value, callback, properties, whitespace, indentation, stack);
+              results.push(element === undef ? "null" : element);
+            };
+            result = hasMembers ? (whitespace ? "[\n" + indentation + results.join(",\n" + indentation) + "\n" + prefix + "]" : ("[" + results.join(",") + "]")) : "[]";
+          } else {
+
+            // Recursively serialize object members. Members are selected from
+            // either a user-specified list of property names, or the object
+            // itself.
+            forEach(properties || value, function(property){
+
+              var element = serialize(property, value, callback, properties, whitespace, indentation, stack);
+              if(element !== undef){
+
+                // According to ES 5.1 section 15.12.3: "If `gap` {whitespace}
+                // is not the empty string, let `member` {quote(property) + ":"}
+                // be the concatenation of `member` and the `space` character."
+                // The "`space` character" refers to the literal space
+                // character, not the `space` {width} argument provided to
+                // `JSON.stringify`.
+                results.push(quote(property) + ":" + (whitespace ? " " : "") + element);
+              };
+              hasMembers || (hasMembers = true);
+            });
+            result = hasMembers ? (whitespace ? "{\n" + indentation + results.join(",\n" + indentation) + "\n" + prefix + "}" : ("{" + results.join(",") + "}")) : "{}";
+          };
+          // Remove the object from the traversed object stack.
+          stack.pop();
+          return result;
+        };
+      };
+      // Public: `JSON.stringify`. See ES 5.1 section 15.12.3.
+      JSON3.stringify = function(source, filter, width){
+
+        var whitespace,callback,properties;
+        if(typeof filter == "function" || typeof filter == "object" && filter){
+
+          if(getClass.call(filter) == functionClass){
+
+            callback = filter;
+          } else if(getClass.call(filter) == arrayClass){
+
+            // Convert the property names array into a makeshift set.
+            properties = {
+            };
+            for(var index = 0,length = filter.length,value;index < length;value = filter[index++],((getClass.call(value) == stringClass || getClass.call(value) == numberClass) && (properties[value] = 1)));
+          };
+        };
+        if(width){
+
+          if(getClass.call(width) == numberClass){
+
+            // Convert the `width` to an integer and create a string containing
+            // `width` number of space characters.
+            if((width -= width % 1) > 0){
+
+              for(whitespace = "",width > 10 && (width = 10);whitespace.length < width;whitespace += " ");
+            };
+          } else if(getClass.call(width) == stringClass){
+
+            whitespace = width.length <= 10 ? width : width.slice(0, 10);
+          };
+        };
+        // Opera <= 7.54u2 discards the values associated with empty string keys
+        // (`""`) only if they are used directly within an object member list
+        // (e.g., `!("" in { "": 1})`).
+        return serialize("", (value = {
+        }, value[""] = source, value), callback, properties, whitespace, "", []);
+      };
+    };
+    // Public: Parses a JSON source string.
+    if(!has("json-parse")){
+
+      var fromCharCode = String.fromCharCode;
+      // Internal: A map of escaped control characters and their unescaped
+      // equivalents.
+      var Unescapes = {
+        '92' : "\\",
+        '34' : '"',
+        '47' : "/",
+        '98' : "\b",
+        '116' : "\t",
+        '110' : "\n",
+        '102' : "\f",
+        '114' : "\r"
+      };
+      // Internal: Stores the parser state.
+      var Index,Source;
+      // Internal: Resets the parser state and throws a `SyntaxError`.
+      var abort = function(){
+
+        Index = Source = null;
+        throw SyntaxError();
+      };
+      // Internal: Returns the next token, or `"$"` if the parser has reached
+      // the end of the source string. A token may be a string, number, `null`
+      // literal, or Boolean literal.
+      var lex = function(){
+
+        var source = Source,length = source.length,value,begin,position,isSigned,charCode;
+        while(Index < length){
+
+          charCode = source.charCodeAt(Index);
+          switch(charCode){case 9:case 10:case 13:case 32:
+          // Skip whitespace tokens, including tabs, carriage returns, line
+          // feeds, and space characters.
+          Index++;
+          break;case 123:case 125:case 91:case 93:case 58:case 44:
+          // Parse a punctuator token (`{`, `}`, `[`, `]`, `:`, or `,`) at
+          // the current position.
+          value = charIndexBuggy ? source.charAt(Index) : source[Index];
+          Index++;
+          return value;case 34:
+          // `"` delimits a JSON string; advance to the next character and
+          // begin parsing the string. String tokens are prefixed with the
+          // sentinel `@` character to distinguish them from punctuators and
+          // end-of-string tokens.
+          for(value = "@",Index++;Index < length;){
+
+            charCode = source.charCodeAt(Index);
+            if(charCode < 32){
+
+              // Unescaped ASCII control characters (those with a code unit
+              // less than the space character) are not permitted.
+              abort();
+            } else if(charCode == 92){
+
+              // A reverse solidus (`\`) marks the beginning of an escaped
+              // control character (including `"`, `\`, and `/`) or Unicode
+              // escape sequence.
+              charCode = source.charCodeAt(++Index);
+              switch(charCode){case 92:case 34:case 47:case 98:case 116:case 110:case 102:case 114:
+              // Revive escaped control characters.
+              value += Unescapes[charCode];
+              Index++;
+              break;case 117:
+              // `\u` marks the beginning of a Unicode escape sequence.
+              // Advance to the first character and validate the
+              // four-digit code point.
+              begin = ++Index;
+              for(position = Index + 4;Index < position;Index++){
+
+                charCode = source.charCodeAt(Index);
+                // A valid sequence comprises four hexdigits (case-
+                // insensitive) that form a single hexadecimal value.
+                if(!(charCode >= 48 && charCode <= 57 || charCode >= 97 && charCode <= 102 || charCode >= 65 && charCode <= 70)){
+
+                  // Invalid Unicode escape sequence.
+                  abort();
+                };
+              };
+              // Revive the escaped character.
+              value += fromCharCode("0x" + source.slice(begin, Index));
+              break;default:
+              // Invalid escape sequence.
+              abort();};
+            } else {
+
+              if(charCode == 34){
+
+                // An unescaped double-quote character marks the end of the
+                // string.
+                break;
+              };
+              charCode = source.charCodeAt(Index);
+              begin = Index;
+              // Optimize for the common case where a string is valid.
+              while(charCode >= 32 && charCode != 92 && charCode != 34){
+
+                charCode = source.charCodeAt(++Index);
+              };
+              // Append the string as-is.
+              value += source.slice(begin, Index);
+            };
+          };
+          if(source.charCodeAt(Index) == 34){
+
+            // Advance to the next character and return the revived string.
+            Index++;
+            return value;
+          };
+          // Unterminated string.
+          abort();default:
+          // Parse numbers and literals.
+          begin = Index;
+          // Advance past the negative sign, if one is specified.
+          if(charCode == 45){
+
+            isSigned = true;
+            charCode = source.charCodeAt(++Index);
+          };
+          // Parse an integer or floating-point value.
+          if(charCode >= 48 && charCode <= 57){
+
+            // Leading zeroes are interpreted as octal literals.
+            if(charCode == 48 && ((charCode = source.charCodeAt(Index + 1)), charCode >= 48 && charCode <= 57)){
+
+              // Illegal octal literal.
+              abort();
+            };
+            isSigned = false;
+            // Parse the integer component.
+            for(;Index < length && ((charCode = source.charCodeAt(Index)), charCode >= 48 && charCode <= 57);Index++);
+            // Floats cannot contain a leading decimal point; however, this
+            // case is already accounted for by the parser.
+            if(source.charCodeAt(Index) == 46){
+
+              position = ++Index;
+              // Parse the decimal component.
+              for(;position < length && ((charCode = source.charCodeAt(position)), charCode >= 48 && charCode <= 57);position++);
+              if(position == Index){
+
+                // Illegal trailing decimal.
+                abort();
+              };
+              Index = position;
+            };
+            // Parse exponents. The `e` denoting the exponent is
+            // case-insensitive.
+            charCode = source.charCodeAt(Index);
+            if(charCode == 101 || charCode == 69){
+
+              charCode = source.charCodeAt(++Index);
+              // Skip past the sign following the exponent, if one is
+              // specified.
+              if(charCode == 43 || charCode == 45){
+
+                Index++;
+              };
+              // Parse the exponential component.
+              for(position = Index;position < length && ((charCode = source.charCodeAt(position)), charCode >= 48 && charCode <= 57);position++);
+              if(position == Index){
+
+                // Illegal empty exponent.
+                abort();
+              };
+              Index = position;
+            };
+            // Coerce the parsed value to a JavaScript number.
+            return +source.slice(begin, Index);
+          };
+          // A negative sign may only precede numbers.
+          if(isSigned){
+
+            abort();
+          };
+          // `true`, `false`, and `null` literals.
+          if(source.slice(Index, Index + 4) == "true"){
+
+            Index += 4;
+            return true;
+          } else if(source.slice(Index, Index + 5) == "false"){
+
+            Index += 5;
+            return false;
+          } else if(source.slice(Index, Index + 4) == "null"){
+
+            Index += 4;
+            return null;
+          };;
+          // Unrecognized token.
+          abort();};
+        };
+        // Return the sentinel `$` character if the parser has reached the end
+        // of the source string.
+        return "$";
+      };
+      // Internal: Parses a JSON `value` token.
+      var get = function(value){
+
+        var results,hasMembers;
+        if(value == "$"){
+
+          // Unexpected end of input.
+          abort();
+        };
+        if(typeof value == "string"){
+
+          if((charIndexBuggy ? value.charAt(0) : value[0]) == "@"){
+
+            // Remove the sentinel `@` character.
+            return value.slice(1);
+          };
+          // Parse object and array literals.
+          if(value == "["){
+
+            // Parses a JSON array, returning a new JavaScript array.
+            results = [];
+            for(;;hasMembers || (hasMembers = true)){
+
+              value = lex();
+              // A closing square bracket marks the end of the array literal.
+              if(value == "]"){
+
+                break;
+              };
+              // If the array literal contains elements, the current token
+              // should be a comma separating the previous element from the
+              // next.
+              if(hasMembers){
+
+                if(value == ","){
+
+                  value = lex();
+                  if(value == "]"){
+
+                    // Unexpected trailing `,` in array literal.
+                    abort();
+                  };
+                } else {
+
+                  // A `,` must separate each array element.
+                  abort();
+                };
+              };
+              // Elisions and leading commas are not permitted.
+              if(value == ","){
+
+                abort();
+              };
+              results.push(get(value));
+            };
+            return results;
+          } else if(value == "{"){
+
+            // Parses a JSON object, returning a new JavaScript object.
+            results = {
+            };
+            for(;;hasMembers || (hasMembers = true)){
+
+              value = lex();
+              // A closing curly brace marks the end of the object literal.
+              if(value == "}"){
+
+                break;
+              };
+              // If the object literal contains members, the current token
+              // should be a comma separator.
+              if(hasMembers){
+
+                if(value == ","){
+
+                  value = lex();
+                  if(value == "}"){
+
+                    // Unexpected trailing `,` in object literal.
+                    abort();
+                  };
+                } else {
+
+                  // A `,` must separate each object member.
+                  abort();
+                };
+              };
+              // Leading commas are not permitted, object property names must be
+              // double-quoted strings, and a `:` must separate each property
+              // name and value.
+              if(value == "," || typeof value != "string" || (charIndexBuggy ? value.charAt(0) : value[0]) != "@" || lex() != ":"){
+
+                abort();
+              };
+              results[value.slice(1)] = get(lex());
+            };
+            return results;
+          };
+          // Unexpected token encountered.
+          abort();
+        };
+        return value;
+      };
+      // Internal: Updates a traversed object member.
+      var update = function(source, property, callback){
+
+        var element = walk(source, property, callback);
+        if(element === undef){
+
+          delete source[property];
+        } else {
+
+          source[property] = element;
+        };
+      };
+      // Internal: Recursively traverses a parsed JSON object, invoking the
+      // `callback` function for each value. This is an implementation of the
+      // `Walk(holder, name)` operation defined in ES 5.1 section 15.12.2.
+      var walk = function(source, property, callback){
+
+        var value = source[property],length;
+        if(typeof value == "object" && value){
+
+          // `forEach` can't be used to traverse an array in Opera <= 8.54
+          // because its `Object#hasOwnProperty` implementation returns `false`
+          // for array indices (e.g., `![1, 2, 3].hasOwnProperty("0")`).
+          if(getClass.call(value) == arrayClass){
+
+            for(length = value.length;length--;){
+
+              update(value, length, callback);
+            };
+          } else {
+
+            forEach(value, function(property){
+
+              update(value, property, callback);
+            });
+          };
+        };
+        return callback.call(source, property, value);
+      };
+      // Public: `JSON.parse`. See ES 5.1 section 15.12.2.
+      JSON3.parse = function(source, callback){
+
+        var result,value;
+        Index = 0;
+        Source = "" + source;
+        result = get(lex());
+        // If a JSON string contains multiple tokens, it is invalid.
+        if(lex() != "$"){
+
+          abort();
+        };
+        // Reset the parser state.
+        Index = Source = null;
+        return callback && getClass.call(callback) == functionClass ? walk((value = {
+        }, value[""] = result, value), "", callback) : result;
+      };
+    };
+  };
+  // Export for asynchronous module loaders.
+  if(isLoader){
+
+    define(function(){
+
+      return JSON3;
+    });
+  };
+}(this));
+// End of original code.
+// Finally expose (polyfilled) window.JSON as qx.lang.Json.JSON
+qx.lang.Json.stringify = window.JSON.stringify;
+qx.lang.Json.parse = window.JSON.parse;
 
 /* ************************************************************************
 
@@ -19288,7 +21276,11 @@ qx.Bootstrap.define("qx.module.Traversing", {
      * collection.
      *
      * @attach {qxWeb}
-     * @param fn {Function} Callback function
+     * @param fn {Function} Callback function which is called with two parameters
+     * <ul>
+     *  <li>current item - DOM node</li>
+     *  <li>current index - Number</li>
+     * </ul>
      * @param ctx {Object} Context object
      * @return {qxWeb} The collection for chaining
      */
@@ -22076,7 +24068,7 @@ qx.Bootstrap.define("qx.bom.request.SimpleXhr", {
     /**
      * Sets (i.e. override) the parser for the response parsing.
      *
-     * @see {@link qx.util.ResponseParser#setParser}
+     * @see qx.util.ResponseParser#setParser
      *
      * @param parser {String|Function}
      * @return {Function} The parser function
@@ -22913,6 +24905,7 @@ qx.Bootstrap.define("qx.util.Request", {
  * @require(qx.bom.request.Xhr#setRequestHeader)
  * @require(qx.bom.request.Xhr#getAllResponseHeaders)
  * @require(qx.bom.request.Xhr#getRequest)
+ * @require(qx.bom.request.Xhr#overrideMimeType)
  * @require(qx.bom.request.Xhr#dispose)
  * @require(qx.bom.request.Xhr#isDisposed)
  */
@@ -23356,6 +25349,33 @@ qx.Bootstrap.define("qx.bom.request.Xhr", {
 
       this.__checkDisposed();
       return this.__nativeXhr.getAllResponseHeaders();
+    },
+    /**
+     * Overrides the MIME type returned by the server
+     * and must be called before @send()@.
+     *
+     * Note:
+     *
+     * * IE doesn't support this method so in this case an Error is thrown.
+     * * after calling this method @getResponseHeader("Content-Type")@
+     *   may return the original (Firefox 23, IE 10, Safari 6) or
+     *   the overriden content type (Chrome 28+, Opera 15+).
+     *
+     *
+     * @param mimeType {String} The mimeType for overriding.
+     * @return {qx.bom.request.Xhr} Self for chaining.
+     */
+    overrideMimeType : function(mimeType){
+
+      this.__checkDisposed();
+      if(this.__nativeXhr.overrideMimeType){
+
+        this.__nativeXhr.overrideMimeType(mimeType);
+      } else {
+
+        throw new Error("Native XHR object doesn't support overrideMimeType.");
+      };
+      return this;
     },
     /**
      * Get wrapped native XMLHttpRequest (or equivalent).
@@ -24790,13 +26810,14 @@ qx.Bootstrap.define("qx.util.ResponseParser", {
      *
      * @param parser {String|Function}
      *
-     *        <br>Can be:
+     * Can be:
      *
-     *         * A parser defined in {@link qx.util.ResponseParser#PARSER},
-     *           referenced by string.
-     *
-     *         * The function to invoke.
-     *           Receives the raw response as argument.
+     * <ul>
+     *   <li>A parser defined in {@link qx.util.ResponseParser#PARSER},
+     *       referenced by string.</li>
+     *   <li>The function to invoke.
+     *       Receives the raw response as argument.</li>
+     * </ul>
      *
      * @return {Function} The parser function
      */
@@ -25949,787 +27970,6 @@ qx.Bootstrap.define("qx.bom.request.Jsonp", {
 
 ************************************************************************ */
 /**
- * Attribute/Property handling for DOM elements.
- */
-qx.Bootstrap.define("qx.module.Attribute", {
-  statics : {
-    /**
-     * Returns the HTML content of the first item in the collection
-     * @attach {qxWeb}
-     * @return {String|null} HTML content or null if the collection is empty
-     */
-    getHtml : function(){
-
-      if(this[0] && this[0].nodeType === 1){
-
-        return qx.bom.element.Attribute.get(this[0], "html");
-      };
-      return null;
-    },
-    /**
-     * Sets the HTML content of each item in the collection
-     *
-     * @attach {qxWeb}
-     * @param html {String} HTML string
-     * @return {qxWeb} The collection for chaining
-     */
-    setHtml : function(html){
-
-      html = qx.bom.Html.fixEmptyTags(html);
-      this._forEachElement(function(item){
-
-        qx.bom.element.Attribute.set(item, "html", html);
-      });
-      return this;
-    },
-    /**
-     * Sets an HTML attribute on each item in the collection
-     *
-     * @attach {qxWeb}
-     * @param name {String} Attribute name
-     * @param value {var} Attribute value
-     * @return {qxWeb} The collection for chaining
-     */
-    setAttribute : function(name, value){
-
-      this._forEachElement(function(item){
-
-        qx.bom.element.Attribute.set(item, name, value);
-      });
-      return this;
-    },
-    /**
-     * Returns the value of the given attribute for the first item in the
-     * collection.
-     *
-     * @attach {qxWeb}
-     * @param name {String} Attribute name
-     * @return {var} Attribute value
-     */
-    getAttribute : function(name){
-
-      if(this[0] && this[0].nodeType === 1){
-
-        return qx.bom.element.Attribute.get(this[0], name);
-      };
-      return null;
-    },
-    /**
-     * Removes the given attribute from all elements in the collection
-     *
-     * @attach {qxWeb}
-     * @param name {String} Attribute name
-     * @return {qxWeb} The collection for chaining
-     */
-    removeAttribute : function(name){
-
-      this._forEachElement(function(item){
-
-        qx.bom.element.Attribute.set(item, name, null);
-      });
-      return this;
-    },
-    /**
-     * Sets multiple attributes for each item in the collection.
-     *
-     * @attach {qxWeb}
-     * @param attributes {Map} A map of attribute name/value pairs
-     * @return {qxWeb} The collection for chaining
-     */
-    setAttributes : function(attributes){
-
-      for(var name in attributes){
-
-        this.setAttribute(name, attributes[name]);
-      };
-      return this;
-    },
-    /**
-     * Returns the values of multiple attributes for the first item in the collection
-     *
-     * @attach {qxWeb}
-     * @param names {String[]} List of attribute names
-     * @return {Map} Map of attribute name/value pairs
-     */
-    getAttributes : function(names){
-
-      var attributes = {
-      };
-      for(var i = 0;i < names.length;i++){
-
-        attributes[names[i]] = this.getAttribute(names[i]);
-      };
-      return attributes;
-    },
-    /**
-     * Removes multiple attributes from each item in the collection.
-     *
-     * @attach {qxWeb}
-     * @param attributes {String[]} List of attribute names
-     * @return {qxWeb} The collection for chaining
-     */
-    removeAttributes : function(attributes){
-
-      for(var i = 0,l = attributes.length;i < l;i++){
-
-        this.removeAttribute(attributes[i]);
-      };
-      return this;
-    },
-    /**
-     * Sets a property on each item in the collection
-     *
-     * @attach {qxWeb}
-     * @param name {String} Property name
-     * @param value {var} Property value
-     * @return {qxWeb} The collection for chaining
-     */
-    setProperty : function(name, value){
-
-      for(var i = 0;i < this.length;i++){
-
-        this[i][name] = value;
-      };
-      return this;
-    },
-    /**
-     * Returns the value of the given property for the first item in the
-     * collection
-     *
-     * @attach {qxWeb}
-     * @param name {String} Property name
-     * @return {var} Property value
-     */
-    getProperty : function(name){
-
-      if(this[0]){
-
-        return this[0][name];
-      };
-      return null;
-    },
-    /**
-     * Sets multiple properties for each item in the collection.
-     *
-     * @attach {qxWeb}
-     * @param properties {Map} A map of property name/value pairs
-     * @return {qxWeb} The collection for chaining
-     */
-    setProperties : function(properties){
-
-      for(var name in properties){
-
-        this.setProperty(name, properties[name]);
-      };
-      return this;
-    },
-    /**
-     * Returns the values of multiple properties for the first item in the collection
-     *
-     * @attach {qxWeb}
-     * @param names {String[]} List of property names
-     * @return {Map} Map of property name/value pairs
-     */
-    getProperties : function(names){
-
-      var properties = {
-      };
-      for(var i = 0;i < names.length;i++){
-
-        properties[names[i]] = this.getProperty(names[i]);
-      };
-      return properties;
-    },
-    /**
-     * Returns the currently configured value for the first item in the collection.
-     * Works with simple input fields as well as with select boxes or option
-     * elements. Returns an array for select boxes with multi selection. In all
-     * other cases, a string is returned.
-     *
-     * @attach {qxWeb}
-     * @return {String|Array}
-     */
-    getValue : function(){
-
-      if(this[0] && this[0].nodeType === 1){
-
-        return qx.bom.Input.getValue(this[0]);
-      };
-      return null;
-    },
-    /**
-     * Applies the given value to each element in the collection.
-     * Normally the value is given as a string/number value and applied to the
-     * field content (textfield, textarea) or used to detect whether the field
-     * is checked (checkbox, radiobutton).
-     * Supports array values for selectboxes (multiple selection) and checkboxes
-     * or radiobuttons (for convenience).
-     * Please note: To modify the value attribute of a checkbox or radiobutton
-     * use @link{#set} instead.
-     *
-     * @attach {qxWeb}
-     * @param value {String|Number|Array} The value to apply
-     * @return {qxWeb} The collection for chaining
-     */
-    setValue : function(value){
-
-      this._forEachElement(function(item){
-
-        qx.bom.Input.setValue(item, value);
-      });
-      return this;
-    }
-  },
-  defer : function(statics){
-
-    qxWeb.$attach({
-      "getHtml" : statics.getHtml,
-      "setHtml" : statics.setHtml,
-      "getAttribute" : statics.getAttribute,
-      "setAttribute" : statics.setAttribute,
-      "removeAttribute" : statics.removeAttribute,
-      "getAttributes" : statics.getAttributes,
-      "setAttributes" : statics.setAttributes,
-      "removeAttributes" : statics.removeAttributes,
-      "getProperty" : statics.getProperty,
-      "setProperty" : statics.setProperty,
-      "getProperties" : statics.getProperties,
-      "setProperties" : statics.setProperties,
-      "getValue" : statics.getValue,
-      "setValue" : statics.setValue
-    });
-  }
-});
-
-/* ************************************************************************
-
-   qooxdoo - the new era of web development
-
-   http://qooxdoo.org
-
-   Copyright:
-     2009 Sebastian Werner, http://sebastian-werner.net
-
-   License:
-     LGPL: http://www.gnu.org/licenses/lgpl.html
-     EPL: http://www.eclipse.org/org/documents/epl-v10.php
-     See the LICENSE file in the project's top-level directory for details.
-
-   Authors:
-     * Sebastian Werner (wpbasti)
-
-   ======================================================================
-
-   This class contains code based on the following work:
-
-   * jQuery
-     http://jquery.com
-     Version 1.3.1
-
-     Copyright:
-       2009 John Resig
-
-     License:
-       MIT: http://www.opensource.org/licenses/mit-license.php
-
-************************************************************************ */
-/**
- * This class is mainly a convenience wrapper for DOM elements to
- * qooxdoo's event system.
- *
- * @ignore(qxWeb)
- */
-qx.Bootstrap.define("qx.bom.Html", {
-  /*
-  *****************************************************************************
-     STATICS
-  *****************************************************************************
-  */
-  statics : {
-    /**
-     * Helper method for XHTML replacement.
-     *
-     * @param all {String} Complete string
-     * @param front {String} Front of the match
-     * @param tag {String} Tag name
-     * @return {String} XHTML corrected tag
-     */
-    __fixNonDirectlyClosableHelper : function(all, front, tag){
-
-      return tag.match(/^(abbr|br|col|img|input|link|meta|param|hr|area|embed)$/i) ? all : front + "></" + tag + ">";
-    },
-    /** @type {Map} Contains wrap fragments for specific HTML matches */
-    __convertMap : {
-      opt : [1, "<select multiple='multiple'>", "</select>"],
-      // option or optgroup
-      leg : [1, "<fieldset>", "</fieldset>"],
-      table : [1, "<table>", "</table>"],
-      tr : [2, "<table><tbody>", "</tbody></table>"],
-      td : [3, "<table><tbody><tr>", "</tr></tbody></table>"],
-      col : [2, "<table><tbody></tbody><colgroup>", "</colgroup></table>"],
-      def : qx.core.Environment.select("engine.name", {
-        "mshtml" : [1, "div<div>", "</div>"],
-        "default" : null
-      })
-    },
-    /**
-     * Fixes "XHTML"-style tags in all browsers.
-     * Replaces tags which are not allowed to be closed directly such as
-     * <code>div</code> or <code>p</code>. They are patched to use opening and
-     * closing tags instead, e.g. <code>&lt;p&gt;</code> => <code>&lt;p&gt;&lt;/p&gt;</code>
-     *
-     * @param html {String} HTML to fix
-     * @return {String} Fixed HTML
-     */
-    fixEmptyTags : function(html){
-
-      return html.replace(/(<(\w+)[^>]*?)\/>/g, this.__fixNonDirectlyClosableHelper);
-    },
-    /**
-     * Translates a HTML string into an array of elements.
-     *
-     * @param html {String} HTML string
-     * @param context {Document} Context document in which (helper) elements should be created
-     * @return {Array} List of resulting elements
-     */
-    __convertHtmlString : function(html, context){
-
-      var div = context.createElement("div");
-      html = qx.bom.Html.fixEmptyTags(html);
-      // Trim whitespace, otherwise indexOf won't work as expected
-      var tags = html.replace(/^\s+/, "").substring(0, 5).toLowerCase();
-      // Auto-wrap content into required DOM structure
-      var wrap,map = this.__convertMap;
-      if(!tags.indexOf("<opt")){
-
-        wrap = map.opt;
-      } else if(!tags.indexOf("<leg")){
-
-        wrap = map.leg;
-      } else if(tags.match(/^<(thead|tbody|tfoot|colg|cap)/)){
-
-        wrap = map.table;
-      } else if(!tags.indexOf("<tr")){
-
-        wrap = map.tr;
-      } else if(!tags.indexOf("<td") || !tags.indexOf("<th")){
-
-        wrap = map.td;
-      } else if(!tags.indexOf("<col")){
-
-        wrap = map.col;
-      } else {
-
-        wrap = map.def;
-      };;;;;
-      // Omit string concat when no wrapping is needed
-      if(wrap){
-
-        // Go to html and back, then peel off extra wrappers
-        div.innerHTML = wrap[1] + html + wrap[2];
-        // Move to the right depth
-        var depth = wrap[0];
-        while(depth--){
-
-          div = div.lastChild;
-        };
-      } else {
-
-        div.innerHTML = html;
-      };
-      // Fix IE specific bugs
-      if((qx.core.Environment.get("engine.name") == "mshtml")){
-
-        // Remove IE's autoinserted <tbody> from table fragments
-        // String was a <table>, *may* have spurious <tbody>
-        var hasBody = /<tbody/i.test(html);
-        // String was a bare <thead> or <tfoot>
-        var tbody = !tags.indexOf("<table") && !hasBody ? div.firstChild && div.firstChild.childNodes : wrap[1] == "<table>" && !hasBody ? div.childNodes : [];
-        for(var j = tbody.length - 1;j >= 0;--j){
-
-          if(tbody[j].tagName.toLowerCase() === "tbody" && !tbody[j].childNodes.length){
-
-            tbody[j].parentNode.removeChild(tbody[j]);
-          };
-        };
-        // IE completely kills leading whitespace when innerHTML is used
-        if(/^\s/.test(html)){
-
-          div.insertBefore(context.createTextNode(html.match(/^\s*/)[0]), div.firstChild);
-        };
-      };
-      return qx.lang.Array.fromCollection(div.childNodes);
-    },
-    /**
-     * Cleans-up the given HTML and append it to a fragment
-     *
-     * When no <code>context</code> is given the global document is used to
-     * create new DOM elements.
-     *
-     * When a <code>fragment</code> is given the nodes are appended to this
-     * fragment except the script tags. These are returned in a separate Array.
-     *
-     * Please note: HTML coming from user input must be validated prior
-     * to passing it to this method. HTML is temporarily inserted to the DOM
-     * using <code>innerHTML</code>. As a consequence, scripts included in
-     * attribute event handlers may be executed.
-     *
-     * @param objs {Element[]|String[]} Array of DOM elements or HTML strings
-     * @param context {Document?document} Context in which the elements should be created
-     * @param fragment {Element?null} Document fragment to appends elements to
-     * @return {Element[]} Array of elements (when a fragment is given it only contains script elements)
-     */
-    clean : function(objs, context, fragment){
-
-      context = context || document;
-      // !context.createElement fails in IE with an error but returns typeof 'object'
-      if(typeof context.createElement === "undefined"){
-
-        context = context.ownerDocument || context[0] && context[0].ownerDocument || document;
-      };
-      // Fast-Path:
-      // If a single string is passed in and it's a single tag
-      // just do a createElement and skip the rest
-      if(!fragment && objs.length === 1 && typeof objs[0] === "string"){
-
-        var match = /^<(\w+)\s*\/?>$/.exec(objs[0]);
-        if(match){
-
-          return [context.createElement(match[1])];
-        };
-      };
-      // Interate through items in incoming array
-      var obj,ret = [];
-      for(var i = 0,l = objs.length;i < l;i++){
-
-        obj = objs[i];
-        // Convert HTML string into DOM nodes
-        if(typeof obj === "string"){
-
-          obj = this.__convertHtmlString(obj, context);
-        };
-        // Append or merge depending on type
-        if(obj.nodeType){
-
-          ret.push(obj);
-        } else if(obj instanceof qx.type.BaseArray || (typeof qxWeb !== "undefined" && obj instanceof qxWeb)){
-
-          ret.push.apply(ret, Array.prototype.slice.call(obj, 0));
-        } else if(obj.toElement){
-
-          ret.push(obj.toElement());
-        } else {
-
-          ret.push.apply(ret, obj);
-        };;
-      };
-      // Append to fragment and filter out scripts... or...
-      if(fragment){
-
-        var scripts = [],elem;
-        for(var i = 0;ret[i];i++){
-
-          elem = ret[i];
-          if(elem.nodeType == 1 && elem.tagName.toLowerCase() === "script" && (!elem.type || elem.type.toLowerCase() === "text/javascript")){
-
-            // Trying to remove the element from DOM
-            if(elem.parentNode){
-
-              elem.parentNode.removeChild(ret[i]);
-            };
-            // Store in script list
-            scripts.push(elem);
-          } else {
-
-            if(elem.nodeType === 1){
-
-              // Recursively search for scripts and append them to the list of elements to process
-              var scriptList = qx.lang.Array.fromCollection(elem.getElementsByTagName("script"));
-              ret.splice.apply(ret, [i + 1, 0].concat(scriptList));
-            };
-            // Finally append element to fragment
-            fragment.appendChild(elem);
-          };
-        };
-        return scripts;
-      };
-      // Otherwise return the array of all elements
-      return ret;
-    }
-  }
-});
-
-/* ************************************************************************
-
-   qooxdoo - the new era of web development
-
-   http://qooxdoo.org
-
-   Copyright:
-     2004-2008 1&1 Internet AG, Germany, http://www.1und1.de
-
-   License:
-     LGPL: http://www.gnu.org/licenses/lgpl.html
-     EPL: http://www.eclipse.org/org/documents/epl-v10.php
-     See the LICENSE file in the project's top-level directory for details.
-
-   Authors:
-     * Sebastian Werner (wpbasti)
-     * Andreas Ecker (ecker)
-
-   ======================================================================
-
-   This class contains code based on the following work:
-
-   * jQuery
-     http://jquery.com
-     Version 1.3.1
-
-     Copyright:
-       2009 John Resig
-
-     License:
-       MIT: http://www.opensource.org/licenses/mit-license.php
-
-************************************************************************ */
-/**
- * Cross browser abstractions to work with input elements.
- *
- * @require(qx.lang.Array#contains)
- */
-qx.Bootstrap.define("qx.bom.Input", {
-  /*
-  *****************************************************************************
-     STATICS
-  *****************************************************************************
-  */
-  statics : {
-    /** @type {Map} Internal data structures with all supported input types */
-    __types : {
-      text : 1,
-      textarea : 1,
-      select : 1,
-      checkbox : 1,
-      radio : 1,
-      password : 1,
-      hidden : 1,
-      submit : 1,
-      image : 1,
-      file : 1,
-      search : 1,
-      reset : 1,
-      button : 1
-    },
-    /**
-     * Creates an DOM input/textarea/select element.
-     *
-     * Attributes may be given directly with this call. This is critical
-     * for some attributes e.g. name, type, ... in many clients.
-     *
-     * Note: <code>select</code> and <code>textarea</code> elements are created
-     * using the identically named <code>type</code>.
-     *
-     * @param type {String} Any valid type for HTML, <code>select</code>
-     *   and <code>textarea</code>
-     * @param attributes {Map} Map of attributes to apply
-     * @param win {Window} Window to create the element for
-     * @return {Element} The created input node
-     */
-    create : function(type, attributes, win){
-
-      {
-      };
-      // Work on a copy to not modify given attributes map
-      var attributes = attributes ? qx.lang.Object.clone(attributes) : {
-      };
-      var tag;
-      if(type === "textarea" || type === "select"){
-
-        tag = type;
-      } else {
-
-        tag = "input";
-        attributes.type = type;
-      };
-      return qx.dom.Element.create(tag, attributes, win);
-    },
-    /**
-     * Applies the given value to the element.
-     *
-     * Normally the value is given as a string/number value and applied
-     * to the field content (textfield, textarea) or used to
-     * detect whether the field is checked (checkbox, radiobutton).
-     *
-     * Supports array values for selectboxes (multiple-selection)
-     * and checkboxes or radiobuttons (for convenience).
-     *
-     * Please note: To modify the value attribute of a checkbox or
-     * radiobutton use {@link qx.bom.element.Attribute#set} instead.
-     *
-     * @param element {Element} element to update
-     * @param value {String|Number|Array} the value to apply
-     */
-    setValue : function(element, value){
-
-      var tag = element.nodeName.toLowerCase();
-      var type = element.type;
-      var Array = qx.lang.Array;
-      var Type = qx.lang.Type;
-      if(typeof value === "number"){
-
-        value += "";
-      };
-      if((type === "checkbox" || type === "radio")){
-
-        if(Type.isArray(value)){
-
-          element.checked = Array.contains(value, element.value);
-        } else {
-
-          element.checked = element.value == value;
-        };
-      } else if(tag === "select"){
-
-        var isArray = Type.isArray(value);
-        var options = element.options;
-        var subel,subval;
-        for(var i = 0,l = options.length;i < l;i++){
-
-          subel = options[i];
-          subval = subel.getAttribute("value");
-          if(subval == null){
-
-            subval = subel.text;
-          };
-          subel.selected = isArray ? Array.contains(value, subval) : value == subval;
-        };
-        if(isArray && value.length == 0){
-
-          element.selectedIndex = -1;
-        };
-      } else if((type === "text" || type === "textarea") && (qx.core.Environment.get("engine.name") == "mshtml")){
-
-        // These flags are required to detect self-made property-change
-        // events during value modification. They are used by the Input
-        // event handler to filter events.
-        element.$$inValueSet = true;
-        element.value = value;
-        element.$$inValueSet = null;
-      } else {
-
-        element.value = value;
-      };;
-    },
-    /**
-     * Returns the currently configured value.
-     *
-     * Works with simple input fields as well as with
-     * select boxes or option elements.
-     *
-     * Returns an array in cases of multi-selection in
-     * select boxes but in all other cases a string.
-     *
-     * @param element {Element} DOM element to query
-     * @return {String|Array} The value of the given element
-     */
-    getValue : function(element){
-
-      var tag = element.nodeName.toLowerCase();
-      if(tag === "option"){
-
-        return (element.attributes.value || {
-        }).specified ? element.value : element.text;
-      };
-      if(tag === "select"){
-
-        var index = element.selectedIndex;
-        // Nothing was selected
-        if(index < 0){
-
-          return null;
-        };
-        var values = [];
-        var options = element.options;
-        var one = element.type == "select-one";
-        var clazz = qx.bom.Input;
-        var value;
-        // Loop through all the selected options
-        for(var i = one ? index : 0,max = one ? index + 1 : options.length;i < max;i++){
-
-          var option = options[i];
-          if(option.selected){
-
-            // Get the specifc value for the option
-            value = clazz.getValue(option);
-            // We don't need an array for one selects
-            if(one){
-
-              return value;
-            };
-            // Multi-Selects return an array
-            values.push(value);
-          };
-        };
-        return values;
-      } else {
-
-        return (element.value || "").replace(/\r/g, "");
-      };
-    },
-    /**
-     * Sets the text wrap behaviour of a text area element.
-     * This property uses the attribute "wrap" respectively
-     * the style property "whiteSpace"
-     *
-     * @signature function(element, wrap)
-     * @param element {Element} DOM element to modify
-     * @param wrap {Boolean} Whether to turn text wrap on or off.
-     */
-    setWrap : qx.core.Environment.select("engine.name", {
-      "mshtml" : function(element, wrap){
-
-        var wrapValue = wrap ? "soft" : "off";
-        // Explicitly set overflow-y CSS property to auto when wrapped,
-        // allowing the vertical scroll-bar to appear if necessary
-        var styleValue = wrap ? "auto" : "";
-        element.wrap = wrapValue;
-        element.style.overflowY = styleValue;
-      },
-      "gecko|webkit" : function(element, wrap){
-
-        var wrapValue = wrap ? "soft" : "off";
-        var styleValue = wrap ? "" : "auto";
-        element.setAttribute("wrap", wrapValue);
-        element.style.overflow = styleValue;
-      },
-      "default" : function(element, wrap){
-
-        element.style.whiteSpace = wrap ? "normal" : "nowrap";
-      }
-    })
-  }
-});
-
-/* ************************************************************************
-
-   qooxdoo - the new era of web development
-
-   http://qooxdoo.org
-
-   Copyright:
-     2011-2012 1&1 Internet AG, Germany, http://www.1und1.de
-
-   License:
-     LGPL: http://www.gnu.org/licenses/lgpl.html
-     EPL: http://www.eclipse.org/org/documents/epl-v10.php
-     See the LICENSE file in the project's top-level directory for details.
-
-   Authors:
-     * Martin Wittemann (wittemann)
-     * Daniel Wagner (danielwagner)
-
-************************************************************************ */
-/**
  * DOM manipulation module
  *
  * @ignore(qx.bom.element, qx.bom.element.AnimationJs)
@@ -27303,6 +28543,787 @@ qx.Bootstrap.define("qx.module.Manipulating", {
       "focus" : statics.focus,
       "blur" : statics.blur
     });
+  }
+});
+
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
+     2009 Sebastian Werner, http://sebastian-werner.net
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Sebastian Werner (wpbasti)
+
+   ======================================================================
+
+   This class contains code based on the following work:
+
+   * jQuery
+     http://jquery.com
+     Version 1.3.1
+
+     Copyright:
+       2009 John Resig
+
+     License:
+       MIT: http://www.opensource.org/licenses/mit-license.php
+
+************************************************************************ */
+/**
+ * This class is mainly a convenience wrapper for DOM elements to
+ * qooxdoo's event system.
+ *
+ * @ignore(qxWeb)
+ */
+qx.Bootstrap.define("qx.bom.Html", {
+  /*
+  *****************************************************************************
+     STATICS
+  *****************************************************************************
+  */
+  statics : {
+    /**
+     * Helper method for XHTML replacement.
+     *
+     * @param all {String} Complete string
+     * @param front {String} Front of the match
+     * @param tag {String} Tag name
+     * @return {String} XHTML corrected tag
+     */
+    __fixNonDirectlyClosableHelper : function(all, front, tag){
+
+      return tag.match(/^(abbr|br|col|img|input|link|meta|param|hr|area|embed)$/i) ? all : front + "></" + tag + ">";
+    },
+    /** @type {Map} Contains wrap fragments for specific HTML matches */
+    __convertMap : {
+      opt : [1, "<select multiple='multiple'>", "</select>"],
+      // option or optgroup
+      leg : [1, "<fieldset>", "</fieldset>"],
+      table : [1, "<table>", "</table>"],
+      tr : [2, "<table><tbody>", "</tbody></table>"],
+      td : [3, "<table><tbody><tr>", "</tr></tbody></table>"],
+      col : [2, "<table><tbody></tbody><colgroup>", "</colgroup></table>"],
+      def : qx.core.Environment.select("engine.name", {
+        "mshtml" : [1, "div<div>", "</div>"],
+        "default" : null
+      })
+    },
+    /**
+     * Fixes "XHTML"-style tags in all browsers.
+     * Replaces tags which are not allowed to be closed directly such as
+     * <code>div</code> or <code>p</code>. They are patched to use opening and
+     * closing tags instead, e.g. <code>&lt;p&gt;</code> => <code>&lt;p&gt;&lt;/p&gt;</code>
+     *
+     * @param html {String} HTML to fix
+     * @return {String} Fixed HTML
+     */
+    fixEmptyTags : function(html){
+
+      return html.replace(/(<(\w+)[^>]*?)\/>/g, this.__fixNonDirectlyClosableHelper);
+    },
+    /**
+     * Translates a HTML string into an array of elements.
+     *
+     * @param html {String} HTML string
+     * @param context {Document} Context document in which (helper) elements should be created
+     * @return {Array} List of resulting elements
+     */
+    __convertHtmlString : function(html, context){
+
+      var div = context.createElement("div");
+      html = qx.bom.Html.fixEmptyTags(html);
+      // Trim whitespace, otherwise indexOf won't work as expected
+      var tags = html.replace(/^\s+/, "").substring(0, 5).toLowerCase();
+      // Auto-wrap content into required DOM structure
+      var wrap,map = this.__convertMap;
+      if(!tags.indexOf("<opt")){
+
+        wrap = map.opt;
+      } else if(!tags.indexOf("<leg")){
+
+        wrap = map.leg;
+      } else if(tags.match(/^<(thead|tbody|tfoot|colg|cap)/)){
+
+        wrap = map.table;
+      } else if(!tags.indexOf("<tr")){
+
+        wrap = map.tr;
+      } else if(!tags.indexOf("<td") || !tags.indexOf("<th")){
+
+        wrap = map.td;
+      } else if(!tags.indexOf("<col")){
+
+        wrap = map.col;
+      } else {
+
+        wrap = map.def;
+      };;;;;
+      // Omit string concat when no wrapping is needed
+      if(wrap){
+
+        // Go to html and back, then peel off extra wrappers
+        div.innerHTML = wrap[1] + html + wrap[2];
+        // Move to the right depth
+        var depth = wrap[0];
+        while(depth--){
+
+          div = div.lastChild;
+        };
+      } else {
+
+        div.innerHTML = html;
+      };
+      // Fix IE specific bugs
+      if((qx.core.Environment.get("engine.name") == "mshtml")){
+
+        // Remove IE's autoinserted <tbody> from table fragments
+        // String was a <table>, *may* have spurious <tbody>
+        var hasBody = /<tbody/i.test(html);
+        // String was a bare <thead> or <tfoot>
+        var tbody = !tags.indexOf("<table") && !hasBody ? div.firstChild && div.firstChild.childNodes : wrap[1] == "<table>" && !hasBody ? div.childNodes : [];
+        for(var j = tbody.length - 1;j >= 0;--j){
+
+          if(tbody[j].tagName.toLowerCase() === "tbody" && !tbody[j].childNodes.length){
+
+            tbody[j].parentNode.removeChild(tbody[j]);
+          };
+        };
+        // IE completely kills leading whitespace when innerHTML is used
+        if(/^\s/.test(html)){
+
+          div.insertBefore(context.createTextNode(html.match(/^\s*/)[0]), div.firstChild);
+        };
+      };
+      return qx.lang.Array.fromCollection(div.childNodes);
+    },
+    /**
+     * Cleans-up the given HTML and append it to a fragment
+     *
+     * When no <code>context</code> is given the global document is used to
+     * create new DOM elements.
+     *
+     * When a <code>fragment</code> is given the nodes are appended to this
+     * fragment except the script tags. These are returned in a separate Array.
+     *
+     * Please note: HTML coming from user input must be validated prior
+     * to passing it to this method. HTML is temporarily inserted to the DOM
+     * using <code>innerHTML</code>. As a consequence, scripts included in
+     * attribute event handlers may be executed.
+     *
+     * @param objs {Element[]|String[]} Array of DOM elements or HTML strings
+     * @param context {Document?document} Context in which the elements should be created
+     * @param fragment {Element?null} Document fragment to appends elements to
+     * @return {Element[]} Array of elements (when a fragment is given it only contains script elements)
+     */
+    clean : function(objs, context, fragment){
+
+      context = context || document;
+      // !context.createElement fails in IE with an error but returns typeof 'object'
+      if(typeof context.createElement === "undefined"){
+
+        context = context.ownerDocument || context[0] && context[0].ownerDocument || document;
+      };
+      // Fast-Path:
+      // If a single string is passed in and it's a single tag
+      // just do a createElement and skip the rest
+      if(!fragment && objs.length === 1 && typeof objs[0] === "string"){
+
+        var match = /^<(\w+)\s*\/?>$/.exec(objs[0]);
+        if(match){
+
+          return [context.createElement(match[1])];
+        };
+      };
+      // Interate through items in incoming array
+      var obj,ret = [];
+      for(var i = 0,l = objs.length;i < l;i++){
+
+        obj = objs[i];
+        // Convert HTML string into DOM nodes
+        if(typeof obj === "string"){
+
+          obj = this.__convertHtmlString(obj, context);
+        };
+        // Append or merge depending on type
+        if(obj.nodeType){
+
+          ret.push(obj);
+        } else if(obj instanceof qx.type.BaseArray || (typeof qxWeb !== "undefined" && obj instanceof qxWeb)){
+
+          ret.push.apply(ret, Array.prototype.slice.call(obj, 0));
+        } else if(obj.toElement){
+
+          ret.push(obj.toElement());
+        } else {
+
+          ret.push.apply(ret, obj);
+        };;
+      };
+      // Append to fragment and filter out scripts... or...
+      if(fragment){
+
+        var scripts = [],elem;
+        for(var i = 0;ret[i];i++){
+
+          elem = ret[i];
+          if(elem.nodeType == 1 && elem.tagName.toLowerCase() === "script" && (!elem.type || elem.type.toLowerCase() === "text/javascript")){
+
+            // Trying to remove the element from DOM
+            if(elem.parentNode){
+
+              elem.parentNode.removeChild(ret[i]);
+            };
+            // Store in script list
+            scripts.push(elem);
+          } else {
+
+            if(elem.nodeType === 1){
+
+              // Recursively search for scripts and append them to the list of elements to process
+              var scriptList = qx.lang.Array.fromCollection(elem.getElementsByTagName("script"));
+              ret.splice.apply(ret, [i + 1, 0].concat(scriptList));
+            };
+            // Finally append element to fragment
+            fragment.appendChild(elem);
+          };
+        };
+        return scripts;
+      };
+      // Otherwise return the array of all elements
+      return ret;
+    }
+  }
+});
+
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
+     2011-2012 1&1 Internet AG, Germany, http://www.1und1.de
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Martin Wittemann (wittemann)
+     * Daniel Wagner (danielwagner)
+
+************************************************************************ */
+/**
+ * Attribute/Property handling for DOM elements.
+ */
+qx.Bootstrap.define("qx.module.Attribute", {
+  statics : {
+    /**
+     * Returns the HTML content of the first item in the collection
+     * @attach {qxWeb}
+     * @return {String|null} HTML content or null if the collection is empty
+     */
+    getHtml : function(){
+
+      if(this[0] && this[0].nodeType === 1){
+
+        return qx.bom.element.Attribute.get(this[0], "html");
+      };
+      return null;
+    },
+    /**
+     * Sets the HTML content of each item in the collection
+     *
+     * @attach {qxWeb}
+     * @param html {String} HTML string
+     * @return {qxWeb} The collection for chaining
+     */
+    setHtml : function(html){
+
+      html = qx.bom.Html.fixEmptyTags(html);
+      this._forEachElement(function(item){
+
+        qx.bom.element.Attribute.set(item, "html", html);
+      });
+      return this;
+    },
+    /**
+     * Sets an HTML attribute on each item in the collection
+     *
+     * @attach {qxWeb}
+     * @param name {String} Attribute name
+     * @param value {var} Attribute value
+     * @return {qxWeb} The collection for chaining
+     */
+    setAttribute : function(name, value){
+
+      this._forEachElement(function(item){
+
+        qx.bom.element.Attribute.set(item, name, value);
+      });
+      return this;
+    },
+    /**
+     * Returns the value of the given attribute for the first item in the
+     * collection.
+     *
+     * @attach {qxWeb}
+     * @param name {String} Attribute name
+     * @return {var} Attribute value
+     */
+    getAttribute : function(name){
+
+      if(this[0] && this[0].nodeType === 1){
+
+        return qx.bom.element.Attribute.get(this[0], name);
+      };
+      return null;
+    },
+    /**
+     * Removes the given attribute from all elements in the collection
+     *
+     * @attach {qxWeb}
+     * @param name {String} Attribute name
+     * @return {qxWeb} The collection for chaining
+     */
+    removeAttribute : function(name){
+
+      this._forEachElement(function(item){
+
+        qx.bom.element.Attribute.set(item, name, null);
+      });
+      return this;
+    },
+    /**
+     * Sets multiple attributes for each item in the collection.
+     *
+     * @attach {qxWeb}
+     * @param attributes {Map} A map of attribute name/value pairs
+     * @return {qxWeb} The collection for chaining
+     */
+    setAttributes : function(attributes){
+
+      for(var name in attributes){
+
+        this.setAttribute(name, attributes[name]);
+      };
+      return this;
+    },
+    /**
+     * Returns the values of multiple attributes for the first item in the collection
+     *
+     * @attach {qxWeb}
+     * @param names {String[]} List of attribute names
+     * @return {Map} Map of attribute name/value pairs
+     */
+    getAttributes : function(names){
+
+      var attributes = {
+      };
+      for(var i = 0;i < names.length;i++){
+
+        attributes[names[i]] = this.getAttribute(names[i]);
+      };
+      return attributes;
+    },
+    /**
+     * Removes multiple attributes from each item in the collection.
+     *
+     * @attach {qxWeb}
+     * @param attributes {String[]} List of attribute names
+     * @return {qxWeb} The collection for chaining
+     */
+    removeAttributes : function(attributes){
+
+      for(var i = 0,l = attributes.length;i < l;i++){
+
+        this.removeAttribute(attributes[i]);
+      };
+      return this;
+    },
+    /**
+     * Sets a property on each item in the collection
+     *
+     * @attach {qxWeb}
+     * @param name {String} Property name
+     * @param value {var} Property value
+     * @return {qxWeb} The collection for chaining
+     */
+    setProperty : function(name, value){
+
+      for(var i = 0;i < this.length;i++){
+
+        this[i][name] = value;
+      };
+      return this;
+    },
+    /**
+     * Returns the value of the given property for the first item in the
+     * collection
+     *
+     * @attach {qxWeb}
+     * @param name {String} Property name
+     * @return {var} Property value
+     */
+    getProperty : function(name){
+
+      if(this[0]){
+
+        return this[0][name];
+      };
+      return null;
+    },
+    /**
+     * Sets multiple properties for each item in the collection.
+     *
+     * @attach {qxWeb}
+     * @param properties {Map} A map of property name/value pairs
+     * @return {qxWeb} The collection for chaining
+     */
+    setProperties : function(properties){
+
+      for(var name in properties){
+
+        this.setProperty(name, properties[name]);
+      };
+      return this;
+    },
+    /**
+     * Returns the values of multiple properties for the first item in the collection
+     *
+     * @attach {qxWeb}
+     * @param names {String[]} List of property names
+     * @return {Map} Map of property name/value pairs
+     */
+    getProperties : function(names){
+
+      var properties = {
+      };
+      for(var i = 0;i < names.length;i++){
+
+        properties[names[i]] = this.getProperty(names[i]);
+      };
+      return properties;
+    },
+    /**
+     * Returns the currently configured value for the first item in the collection.
+     * Works with simple input fields as well as with select boxes or option
+     * elements. Returns an array for select boxes with multi selection. In all
+     * other cases, a string is returned.
+     *
+     * @attach {qxWeb}
+     * @return {String|Array}
+     */
+    getValue : function(){
+
+      if(this[0] && this[0].nodeType === 1){
+
+        return qx.bom.Input.getValue(this[0]);
+      };
+      return null;
+    },
+    /**
+     * Applies the given value to each element in the collection.
+     * Normally the value is given as a string/number value and applied to the
+     * field content (textfield, textarea) or used to detect whether the field
+     * is checked (checkbox, radiobutton).
+     * Supports array values for selectboxes (multiple selection) and checkboxes
+     * or radiobuttons (for convenience).
+     * Please note: To modify the value attribute of a checkbox or radiobutton
+     * use @link{#set} instead.
+     *
+     * @attach {qxWeb}
+     * @param value {String|Number|Array} The value to apply
+     * @return {qxWeb} The collection for chaining
+     */
+    setValue : function(value){
+
+      this._forEachElement(function(item){
+
+        qx.bom.Input.setValue(item, value);
+      });
+      return this;
+    }
+  },
+  defer : function(statics){
+
+    qxWeb.$attach({
+      "getHtml" : statics.getHtml,
+      "setHtml" : statics.setHtml,
+      "getAttribute" : statics.getAttribute,
+      "setAttribute" : statics.setAttribute,
+      "removeAttribute" : statics.removeAttribute,
+      "getAttributes" : statics.getAttributes,
+      "setAttributes" : statics.setAttributes,
+      "removeAttributes" : statics.removeAttributes,
+      "getProperty" : statics.getProperty,
+      "setProperty" : statics.setProperty,
+      "getProperties" : statics.getProperties,
+      "setProperties" : statics.setProperties,
+      "getValue" : statics.getValue,
+      "setValue" : statics.setValue
+    });
+  }
+});
+
+/* ************************************************************************
+
+   qooxdoo - the new era of web development
+
+   http://qooxdoo.org
+
+   Copyright:
+     2004-2008 1&1 Internet AG, Germany, http://www.1und1.de
+
+   License:
+     LGPL: http://www.gnu.org/licenses/lgpl.html
+     EPL: http://www.eclipse.org/org/documents/epl-v10.php
+     See the LICENSE file in the project's top-level directory for details.
+
+   Authors:
+     * Sebastian Werner (wpbasti)
+     * Andreas Ecker (ecker)
+
+   ======================================================================
+
+   This class contains code based on the following work:
+
+   * jQuery
+     http://jquery.com
+     Version 1.3.1
+
+     Copyright:
+       2009 John Resig
+
+     License:
+       MIT: http://www.opensource.org/licenses/mit-license.php
+
+************************************************************************ */
+/**
+ * Cross browser abstractions to work with input elements.
+ *
+ * @require(qx.lang.Array#contains)
+ */
+qx.Bootstrap.define("qx.bom.Input", {
+  /*
+  *****************************************************************************
+     STATICS
+  *****************************************************************************
+  */
+  statics : {
+    /** @type {Map} Internal data structures with all supported input types */
+    __types : {
+      text : 1,
+      textarea : 1,
+      select : 1,
+      checkbox : 1,
+      radio : 1,
+      password : 1,
+      hidden : 1,
+      submit : 1,
+      image : 1,
+      file : 1,
+      search : 1,
+      reset : 1,
+      button : 1
+    },
+    /**
+     * Creates an DOM input/textarea/select element.
+     *
+     * Attributes may be given directly with this call. This is critical
+     * for some attributes e.g. name, type, ... in many clients.
+     *
+     * Note: <code>select</code> and <code>textarea</code> elements are created
+     * using the identically named <code>type</code>.
+     *
+     * @param type {String} Any valid type for HTML, <code>select</code>
+     *   and <code>textarea</code>
+     * @param attributes {Map} Map of attributes to apply
+     * @param win {Window} Window to create the element for
+     * @return {Element} The created input node
+     */
+    create : function(type, attributes, win){
+
+      {
+      };
+      // Work on a copy to not modify given attributes map
+      var attributes = attributes ? qx.lang.Object.clone(attributes) : {
+      };
+      var tag;
+      if(type === "textarea" || type === "select"){
+
+        tag = type;
+      } else {
+
+        tag = "input";
+        attributes.type = type;
+      };
+      return qx.dom.Element.create(tag, attributes, win);
+    },
+    /**
+     * Applies the given value to the element.
+     *
+     * Normally the value is given as a string/number value and applied
+     * to the field content (textfield, textarea) or used to
+     * detect whether the field is checked (checkbox, radiobutton).
+     *
+     * Supports array values for selectboxes (multiple-selection)
+     * and checkboxes or radiobuttons (for convenience).
+     *
+     * Please note: To modify the value attribute of a checkbox or
+     * radiobutton use {@link qx.bom.element.Attribute#set} instead.
+     *
+     * @param element {Element} element to update
+     * @param value {String|Number|Array} the value to apply
+     */
+    setValue : function(element, value){
+
+      var tag = element.nodeName.toLowerCase();
+      var type = element.type;
+      var Array = qx.lang.Array;
+      var Type = qx.lang.Type;
+      if(typeof value === "number"){
+
+        value += "";
+      };
+      if((type === "checkbox" || type === "radio")){
+
+        if(Type.isArray(value)){
+
+          element.checked = Array.contains(value, element.value);
+        } else {
+
+          element.checked = element.value == value;
+        };
+      } else if(tag === "select"){
+
+        var isArray = Type.isArray(value);
+        var options = element.options;
+        var subel,subval;
+        for(var i = 0,l = options.length;i < l;i++){
+
+          subel = options[i];
+          subval = subel.getAttribute("value");
+          if(subval == null){
+
+            subval = subel.text;
+          };
+          subel.selected = isArray ? Array.contains(value, subval) : value == subval;
+        };
+        if(isArray && value.length == 0){
+
+          element.selectedIndex = -1;
+        };
+      } else if((type === "text" || type === "textarea") && (qx.core.Environment.get("engine.name") == "mshtml")){
+
+        // These flags are required to detect self-made property-change
+        // events during value modification. They are used by the Input
+        // event handler to filter events.
+        element.$$inValueSet = true;
+        element.value = value;
+        element.$$inValueSet = null;
+      } else {
+
+        element.value = value;
+      };;
+    },
+    /**
+     * Returns the currently configured value.
+     *
+     * Works with simple input fields as well as with
+     * select boxes or option elements.
+     *
+     * Returns an array in cases of multi-selection in
+     * select boxes but in all other cases a string.
+     *
+     * @param element {Element} DOM element to query
+     * @return {String|Array} The value of the given element
+     */
+    getValue : function(element){
+
+      var tag = element.nodeName.toLowerCase();
+      if(tag === "option"){
+
+        return (element.attributes.value || {
+        }).specified ? element.value : element.text;
+      };
+      if(tag === "select"){
+
+        var index = element.selectedIndex;
+        // Nothing was selected
+        if(index < 0){
+
+          return null;
+        };
+        var values = [];
+        var options = element.options;
+        var one = element.type == "select-one";
+        var clazz = qx.bom.Input;
+        var value;
+        // Loop through all the selected options
+        for(var i = one ? index : 0,max = one ? index + 1 : options.length;i < max;i++){
+
+          var option = options[i];
+          if(option.selected){
+
+            // Get the specifc value for the option
+            value = clazz.getValue(option);
+            // We don't need an array for one selects
+            if(one){
+
+              return value;
+            };
+            // Multi-Selects return an array
+            values.push(value);
+          };
+        };
+        return values;
+      } else {
+
+        return (element.value || "").replace(/\r/g, "");
+      };
+    },
+    /**
+     * Sets the text wrap behaviour of a text area element.
+     * This property uses the attribute "wrap" respectively
+     * the style property "whiteSpace"
+     *
+     * @signature function(element, wrap)
+     * @param element {Element} DOM element to modify
+     * @param wrap {Boolean} Whether to turn text wrap on or off.
+     */
+    setWrap : qx.core.Environment.select("engine.name", {
+      "mshtml" : function(element, wrap){
+
+        var wrapValue = wrap ? "soft" : "off";
+        // Explicitly set overflow-y CSS property to auto when wrapped,
+        // allowing the vertical scroll-bar to appear if necessary
+        var styleValue = wrap ? "auto" : "";
+        element.wrap = wrapValue;
+        element.style.overflowY = styleValue;
+      },
+      "gecko|webkit" : function(element, wrap){
+
+        var wrapValue = wrap ? "soft" : "off";
+        var styleValue = wrap ? "" : "auto";
+        element.setAttribute("wrap", wrapValue);
+        element.style.overflow = styleValue;
+      },
+      "default" : function(element, wrap){
+
+        element.style.whiteSpace = wrap ? "normal" : "nowrap";
+      }
+    })
   }
 });
 
@@ -32329,7 +34350,7 @@ qx.Bootstrap.define("qx.Class", {
         if(clazz.$$includes){
 
           list = clazz.$$flatIncludes;
-          for(i = 0,l = list.length;i < l;i++){
+          for(,;i < l;i++){
 
             if(list[i] === mixin){
 
@@ -33271,6 +35292,8 @@ qx.Class.define("qx.data.SingleValueBinding", {
      */
     bind : function(sourceObject, sourcePropertyChain, targetObject, targetPropertyChain, options){
 
+      {
+      };
       // set up the target binding
       var targetListenerMap = this.__setUpTargetBinding(sourceObject, sourcePropertyChain, targetObject, targetPropertyChain, options);
       // get the property names
@@ -35514,7 +37537,7 @@ qx.Class.define("qx.log.Logger", {
     },
     /**
      * Prints a method deprecation warning and a stack trace if the setting
-     * <code>qx.debug</code> is set to <code>on</code>.
+     * <code>qx.debug</code> is set to <code>true</code>.
      *
      * @param fcn {Function} reference to the deprecated function. This is
      *     arguments.callee if the calling method is to be deprecated.
@@ -35529,7 +37552,7 @@ qx.Class.define("qx.log.Logger", {
     },
     /**
      * Prints a class deprecation warning and a stack trace if the setting
-     * <code>qx.debug</code> is set to <code>on</code>.
+     * <code>qx.debug</code> is set to <code>true</code>.
      *
      * @param clazz {Class} reference to the deprecated class.
      * @param msg {String?} Optional message to be printed.
@@ -35543,7 +37566,7 @@ qx.Class.define("qx.log.Logger", {
     },
     /**
      * Prints an event deprecation warning and a stack trace if the setting
-     * <code>qx.debug</code> is set to <code>on</code>.
+     * <code>qx.debug</code> is set to <code>true</code>.
      *
      * @param clazz {Class} reference to the deprecated class.
      * @param event {String} deprecated event name.
@@ -35558,7 +37581,7 @@ qx.Class.define("qx.log.Logger", {
     },
     /**
      * Prints a mixin deprecation warning and a stack trace if the setting
-     * <code>qx.debug</code> is set to <code>on</code>.
+     * <code>qx.debug</code> is set to <code>true</code>.
      *
      * @param clazz {Class} reference to the deprecated mixin.
      * @param msg {String?} Optional message to be printed.
@@ -35572,7 +37595,7 @@ qx.Class.define("qx.log.Logger", {
     },
     /**
      * Prints a constant deprecation warning and a stacktrace if the setting
-     * <code>qx.debug</code> is set to <code>on</code> AND the browser supports
+     * <code>qx.debug</code> is set to <code>true</code> AND the browser supports
      * __defineGetter__!
      *
      * @param clazz {Class} The class the constant is attached to.
@@ -35589,7 +37612,7 @@ qx.Class.define("qx.log.Logger", {
     /**
      * Prints a deprecation waring and a stacktrace when a subclass overrides
      * the passed method name. The deprecation is only printed if the setting
-     * <code>qx.debug</code> is set to <code>on</code>.
+     * <code>qx.debug</code> is set to <code>true</code>.
      *
      *
      * @param object {qx.core.Object} Instance to check for overriding.
@@ -39648,7 +41671,7 @@ qx.Class.define("qx.util.ObjectPool", {
     for(classname in pool){
 
       list = pool[classname];
-      for(i = 0,l = list.length;i < l;i++){
+      for(,;i < l;i++){
 
         list[i].dispose();
       };
@@ -41301,7 +43324,7 @@ qx.Bootstrap.define("qx.dev.FakeServer", {
       this.removeFilter(this.__filter);
       this.__filter = null;
       this.__fakeServer.restore();
-      this.__fakeServer = null,this.getFakeServer();
+      ,;
     },
     /**
      * Returns a RegExp using the given pattern. Curly brackets and anything
@@ -41417,6 +43440,8 @@ qx.Bootstrap.define("qx.dev.unit.Sinon", {
  * @ignore(msSetImmediate.*)
  * @lint ignoreUnused(alen, requestMethod, index)
  * @lint ignoreNoLoopBlock()
+ *
+ * @lint ignoreJsdocKey(author, license, depend)
  */
 (function(){
 
@@ -41878,7 +43903,7 @@ qx.Bootstrap.define("qx.dev.unit.Sinon", {
 
           is += " ";
         };
-        for(i = 0,l = properties.length;i < l;++i){
+        for(,;i < l;++i){
 
           prop = properties[i];
           obj = object[prop];
@@ -46975,7 +49000,6 @@ qx.Bootstrap.define("qx.event.util.Keyboard", {
      */
     isIdentifiableKeyCode : function(keyCode){
 
-      // A-Z (TODO: is this lower or uppercase?)
       if(keyCode >= this.charCodeA && keyCode <= this.charCodeZ){
 
         return true;

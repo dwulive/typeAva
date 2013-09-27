@@ -1,5 +1,6 @@
-///<reference path="Scripts\qx3.ts">
-//<reference path="Scripts\qx3.ts">
+﻿/*<reference path="Scripts\qx3.d.ts" >
+
+*/
 // ==UserScript==
 // @name           Ava Tools
 // @description    Ava Tools - script for fun and good times
@@ -412,6 +413,7 @@ else
                     RETURN_TIME_INDEX: 3,
                     CMD_LIST_INDEX: 1,
                     cityBuildings: null,
+                    civ_cont: null,
                     initialize: function () {
                         paDebug("paTweak initialize");
                         this.app = qx.core.Init.getApplication();
@@ -420,7 +422,7 @@ else
                         this.bQc = this.cInfoView.buildingQueue;
                         this.bQh = this.bQc.header;
                         this.playerName = webfrontend.data.Player.getInstance().getName();
-                        var civ_cont = this.cInfoView.container.getChildren();
+                        civ_cont = this.cInfoView.container.getChildren();
                         this.loadOptions();
 
                         for (var i = 0; i < civ_cont.length; i++) {
@@ -456,7 +458,7 @@ else
                         }
                     },
                     loadOptions: function () {
-                        _str = localStorage.getItem("Ava_options");
+                        var _str = localStorage.getItem("Ava_options");
                         paDebug(_str);
                         if (_str)
                             this.options = JSON.parse(_str);
@@ -507,7 +509,7 @@ else {
                         }
                         this.options.AvaToolsVersion = paTweak.Version.PAversion;
                         this.app.setUserData("Ava_options", this.options);
-                        str = JSON.stringify(this.options);
+                        var str = JSON.stringify(this.options);
                         localStorage.setItem("Ava_options", str);
                         console.log("loaded");
                     },
@@ -2710,7 +2712,7 @@ else
                                         var newStr = newPhrases.split('|');
                                         eN = eN.replace(re, function (w) {
                                             for (var ii = 0; ii < oldStr.length; ++ii) {
-                                                if (!oldStr[ii].iCompare(w)) {
+                                                if (oldStr[ii] == iCompare(w)) {
                                                     return "<span style='font-weight: bold;'>" + newStr[ii] + "</span>";
                                                 }
                                             }
@@ -12804,6 +12806,7 @@ else
                 paTweak.Main.getInstance().initialize();
             }
         }
+        ;
         function initTools() {
             initialize();
         }
